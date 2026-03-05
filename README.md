@@ -1,249 +1,186 @@
 # PRC PDF Extraction
 
-Generic WordPress plugin for extracting text from PDF documents using OCR/AI providers, making content accessible to LLMs via custom endpoints. Post type, URL slug, labels, and extraction prompts are all filterable so the plugin can be adapted to any use case without forking.
+Extracts text from topline survey PDFs using AI OCR providers and surfaces the content as web pages, Markdown, and plain text for researchers and LLMs.
 
-## Pew Research Center configuration
+## Overview
 
-PRC uses this plugin to process **survey topline documents**. The `prc-platform-core` AI module overrides the generic defaults via filters so that the topline workflow is transparent to the rest of the platform:
+This plugin reads `topline`-type entries from a parent post's `reportMaterials` meta, runs AI OCR on the attached PDFs, and persists each result as a `pdf_extraction` child post. Extracted content is available at `/{parent-slug}/extraction` (Markdown with YAML frontmatter) and `/{parent-slug}/text` (plain text). Extraction jobs are queued asynchronously via Action Scheduler and can also be triggered from WP-CLI or the block editor via REST API. The plugin integrates with `prc-markdown-for-agents` to serve standardized Markdown responses with proper headers for LLM discovery.
 
-| Filter                                | PRC value                 | Generic default                  |
-| ------------------------------------- | ------------------------- | -------------------------------- |
-| `prc_pdf_extraction_post_type`        | `topline`                 | `pdf_extraction`                 |
-| `prc_pdf_extraction_url_slug`         | `topline`                 | `extraction`                     |
-| `prc_pdf_extraction_labels`           | Topline / Toplines        | PDF Extraction / PDF Extractions |
-| `prc_pdf_extraction_markdown_prompt`  | PRC survey topline prompt | Generic PDF prompt               |
-| `prc_pdf_extraction_gutenberg_prompt` | PRC survey topline prompt | Generic PDF prompt               |
+### Dependencies
 
-These filters are registered in `plugins/prc-platform-core/includes/ai/class-ai.php` inside `register_pdf_extraction_filters()`. If `prc-platform-core` is not active, the plugin falls back to the generic defaults above.
-
-## Filter API
-
-All filters fire at registration time, before the post type or rewrite rules are flushed.
-
-```php
-// Override post type slug
-add_filter( 'prc_pdf_extraction_post_type', fn() => 'topline' );
-
-// Override URL endpoint slug  (/extraction → /toplines)
-add_filter( 'prc_pdf_extraction_url_slug', fn() => 'toplines' );
-
-// Override labels
-add_filter( 'prc_pdf_extraction_labels', function ( array $labels ): array {
-    return array_merge( $labels, [
-        'name'          => 'Toplines',
-        'singular_name' => 'Topline',
-    ] );
-} );
-
-// Override extraction prompts
-add_filter( 'prc_pdf_extraction_markdown_prompt', fn() => 'Your custom prompt...' );
-add_filter( 'prc_pdf_extraction_gutenberg_prompt', fn() => 'Your custom prompt...' );
-
-// Tune extraction thresholds
-add_filter( 'prc_pdf_extraction_min_chars', fn() => 2000 );
-add_filter( 'prc_pdf_extraction_max_validation_retries', fn() => 3 );
-```
-
-## Installation
-
-```bash
-wp plugin activate prc-pdf-extraction
-```
-
-## WP-CLI
-
-```bash
-# List available OCR providers
-wp prc-pdf-extraction list-providers
-
-# Process a specific post
-wp prc-pdf-extraction process --post_id=123
-
-# Test extraction against a local PDF file
-wp prc-pdf-extraction test_file --file=/path/to/document.pdf --show-markdown
-
-# Force re-process even if extraction already exists
-wp prc-pdf-extraction process --post_id=123 --force
-
-# Dry run (shows what would be processed, no save)
-wp prc-pdf-extraction process --post_id=123 --dry-run
-
-# Target a specific material by index (0-based)
-wp prc-pdf-extraction process --post_id=123 --material_index=1
-```
-
-## OCR Providers
-
-Three providers are supported. Providers are tried in priority order; the first to succeed wins.
-
-| Provider           | Priority    | Auth           | Multi-page | Markdown |
-| ------------------ | ----------- | -------------- | ---------- | -------- |
-| Claude (Anthropic) | 5 (highest) | API Key        | ✅         | ✅       |
-| Gemini (Google)    | 10          | API Key        | ✅         | ✅       |
-| WP AI              | 15          | WP site config | varies     | varies   |
-
-### Claude setup
-
-```php
-// vip-config/vip-env-vars.local.php
-define( 'VIP_ENV_VAR_PRC_PLATFORM_ANTHROPIC_API_KEY', 'sk-ant-...' );
-```
-
-### Gemini setup
-
-1. Get an API key at [Google AI Studio](https://aistudio.google.com/apikey).
-
-```php
-define( 'VIP_ENV_VAR_PRC_PLATFORM_GOOGLE_API_KEY', 'AIzaSy...' );
-```
-
-### WP AI setup
-
-WP AI uses whatever AI provider is configured in the WordPress admin. No additional constants are required.
-
-### Troubleshooting
-
-| Symptom                  | Likely cause                                                 |
-| ------------------------ | ------------------------------------------------------------ |
-| "No providers available" | API keys missing or malformed                                |
-| Very low character count | Only the first page was processed                            |
-| Validation failures      | Prompt mismatch — check `prc_pdf_extraction_markdown_prompt` |
+-   **Upstream**: `prc-platform-core` (required), `prc-markdown-for-agents` (optional — Markdown endpoint falls back to a legacy template when absent), Action Scheduler (required for async processing)
+-   **External APIs**: `ANTHROPIC_API_KEY` for Claude (primary provider), `GOOGLE_API_KEY` for Gemini (fallback provider)
+-   **Downstream**: Nothing depends on this plugin directly; consumers access extractions through public URL endpoints or via the `pdf_extraction` post type.
 
 ## Architecture
 
-```text
-prc-pdf-extraction/
-├── prc-pdf-extraction.php           # Main plugin file
-├── includes/
-│   ├── class-bootstrap.php          # Plugin initialization
-│   ├── class-loader.php             # Hook management
-│   ├── class-content-type.php       # Post type registration (filterable)
-│   ├── class-rewrite-rules.php      # URL rewrite rules (filterable slug)
-│   ├── class-rest-api.php           # REST endpoints (/prc-pdf-extraction/v1/)
-│   ├── class-action-scheduler-handler.php
-│   ├── class-extraction-service.php
-│   ├── class-admin.php
-│   ├── class-wp-cli-commands.php
-│   ├── class-bulk-cli-command.php
-│   ├── class-content-discovery.php
-│   ├── utils.php                    # Helper functions
-│   └── ocr/
-│       ├── application/
-│       │   ├── class-ocr-orchestrator.php
-│       │   ├── class-extraction-formatter.php
-│       │   ├── class-quality-validator.php
-│       │   ├── class-output-validator.php
-│       │   ├── class-page-analyzer.php
-│       │   └── class-result-merger.php
-│       ├── domain/
-│       │   └── class-ocr-response.php
-│       └── providers/
-│           ├── trait-shared-extraction-prompts.php  # Generic prompts (filterable)
-│           ├── class-claude-provider.php
-│           ├── class-gemini-provider.php
-│           └── class-wp-ai-provider.php
-├── template-extraction.php          # Front-end template
-└── tests/
-    ├── bootstrap.php
-    ├── test-plugin.php
-    ├── test-content-type.php
-    ├── test-content-discovery.php
-    ├── test-admin.php
-    ├── test-extraction-service.php
-    ├── test-action-scheduler-handler.php
-    ├── test-utils.php
-    └── ocr/
-        ├── test-claude-provider.php
-        ├── test-quality-validator.php
-        └── test-output-validator.php
-```
+Extractions follow a request → queue → process → persist flow:
 
-### Post type
+1. An editor triggers extraction from the block editor (REST) or WP-CLI.
+2. `Action_Scheduler_Handler::schedule()` enqueues an async job.
+3. On the job callback, `Extraction_Service` resolves the PDF (local uploads dir or remote download), calls `OCR_Orchestrator::extract_text()`, and saves the result as a `pdf_extraction` CPT post.
+4. `OCR_Orchestrator` tries registered providers sorted by priority. Claude (priority 4) runs first; Gemini (priority 5) is the fallback. Each provider returns an `OCR_Response` with plain text, Markdown, and Gutenberg block HTML.
+5. Public endpoints (`/extraction`, `/text`) are intercepted early in `parse_request` by `Rewrite_Rules`, which delegates Markdown serving to `prc-markdown-for-agents` when available.
+6. `Content_Discovery` adds `<link rel="alternate">` tags, JSON-LD `DigitalDocument` structured data, `/llms.txt`, and `robots.txt` Allow rules to make extractions discoverable by crawlers and LLMs.
 
-The post type slug is `pdf_extraction` by default, overridden to `topline` in PRC via filter.
+The OCR layer uses a layered namespace under `PRC\Platform\PDF_Extraction\OCR`:
 
-**Supports:** title, editor, excerpt, revisions, custom-fields, page-attributes (parent-child relationships)
+| Layer          | Namespace            | Responsibility                                                        |
+| -------------- | -------------------- | --------------------------------------------------------------------- |
+| Domain         | `OCR\Domain`         | `OCR_Request`, `OCR_Response`, typed exceptions                       |
+| Application    | `OCR\Application`    | `OCR_Orchestrator`, quality validation, page analysis, result merging |
+| Infrastructure | `OCR\Infrastructure` | HTTP client abstraction, file base64 encoder                          |
+| Providers      | `OCR\Providers`      | Claude, Gemini, WP AI concrete implementations                        |
 
-**Meta fields:**
+### Key Files
 
-| Field                       | Description                                           |
-| --------------------------- | ----------------------------------------------------- |
-| `_pdf_source_attachment_id` | Source PDF attachment ID                              |
-| `_pdf_source_url`           | Source PDF URL                                        |
-| `_pdf_source_label`         | Label from `reportMaterials`                          |
-| `_ocr_provider_used`        | Provider that succeeded (`claude`, `gemini`, `wp-ai`) |
-| `_ocr_confidence_score`     | Confidence score (0–1)                                |
-| `_extraction_date`          | ISO timestamp of extraction                           |
-| `_extraction_version`       | Plugin version used                                   |
-| `_extracted_text_plain`     | Plain text content                                    |
-| `_extracted_text_markdown`  | Markdown-formatted content                            |
-| `_validation_status`        | `passed` / `warning` / `failed`                       |
-| `_validation_issues`        | Array of validation issue strings                     |
-| `_processing_cost_usd`      | Estimated cost in USD                                 |
-| `_character_count`          | Total character count                                 |
+| Path                                                         | Purpose                                                                                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `prc-pdf-extraction.php`                                     | Plugin entry point; defines constants, registers activation hooks                                                   |
+| `includes/class-bootstrap.php`                               | Loads all dependencies and wires up module instances                                                                |
+| `includes/class-content-type.php`                            | Registers the `pdf_extraction` CPT and its 13 post meta fields                                                      |
+| `includes/class-extraction-service.php`                      | Core logic: resolve PDF path, run OCR, save extraction post                                                         |
+| `includes/class-action-scheduler-handler.php`                | Async job queue; fires `prc_pdf_extraction_process_complete` and `prc_pdf_extraction_process_failed` hooks          |
+| `includes/class-rest-api.php`                                | `POST /convert` and `GET /status` endpoints for block editor                                                        |
+| `includes/class-rewrite-rules.php`                           | Intercepts `/{slug}/extraction` and `/{slug}/text` URL paths                                                        |
+| `includes/class-content-discovery.php`                       | Alternate link tags, JSON-LD, `/llms.txt`, robots.txt rules                                                         |
+| `includes/class-markdown-for-agents-integration.php`         | Registers CPT support for `prc-markdown-for-agents`; enriches YAML frontmatter                                      |
+| `includes/class-wp-cli-commands.php`                         | Single-post CLI commands: `process`, `test-file`, `validate`, `list-extractions`, `list-providers`, `estimate-cost` |
+| `includes/class-bulk-cli-command.php`                        | `bulk-process` VIP CLI command; cursor-paginated, defaults to dry-run                                               |
+| `includes/ocr/application/class-ocr-orchestrator.php`        | Tries providers by priority; returns first response that passes quality validation                                  |
+| `includes/ocr/providers/class-claude-provider.php`           | Anthropic API integration; uses Files API to upload once and cache `file_id` on attachment meta                     |
+| `includes/ocr/providers/class-gemini-provider.php`           | Google Gemini API integration; page-grouped extraction with validation                                              |
+| `includes/ocr/providers/trait-shared-extraction-prompts.php` | Markdown and Gutenberg block extraction prompts shared by Claude and Gemini                                         |
+| `includes/templates/template-extraction.php`                 | Fallback Markdown template (used when `prc-markdown-for-agents` is inactive)                                        |
+| `includes/templates/template-text.php`                       | Plain-text response template for `/text` endpoint                                                                   |
 
-### REST API
+## Hooks & Filters
 
-Base namespace: `prc-pdf-extraction/v1`
+| Hook                                   | Type   | Description                                                                                       |
+| -------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `prc_pdf_extraction_post_type`         | filter | Override the CPT slug (default: `pdf_extraction`)                                                 |
+| `prc_pdf_extraction_url_slug`          | filter | Override the public URL segment (default: `extraction`)                                           |
+| `prc_pdf_extraction_labels`            | filter | Override CPT label strings                                                                        |
+| `prc_pdf_extraction_claude_model`      | filter | Override the Claude model at runtime (default: `claude-sonnet-4-6`)                               |
+| `prc_pdf_extraction_gemini_model`      | filter | Override the Gemini model at runtime                                                              |
+| `prc_pdf_extraction_claude_max_tokens` | filter | Override Claude `max_tokens` (default: 16384)                                                     |
+| `prc_pdf_extraction_ocr_timeout`       | filter | Override API request timeout in seconds (default: 120)                                            |
+| `prc_pdf_extraction_provider_priority` | filter | Override a provider's priority; receives `($priority, $provider_name)`                            |
+| `prc_pdf_extraction_markdown_prompt`   | filter | Replace the Markdown extraction prompt sent to Claude and Gemini                                  |
+| `prc_pdf_extraction_gutenberg_prompt`  | filter | Replace the Gutenberg block extraction prompt                                                     |
+| `prc_pdf_extraction_process_complete`  | action | Fires after a successful async extraction: `($extraction_id, $post_id, $attachment_id, $user_id)` |
+| `prc_pdf_extraction_process_failed`    | action | Fires after a failed async extraction: `($post_id, $attachment_id, $user_id, $error_message)`     |
 
-| Endpoint   | Method | Description                                |
-| ---------- | ------ | ------------------------------------------ |
-| `/convert` | `POST` | Trigger extraction for a post + attachment |
+The plugin also filters `prc_markdown_for_agents_frontmatter` to inject OCR metadata (provider, confidence, extraction date, source URL, parent article link) into the YAML frontmatter of Markdown responses.
 
-### URL endpoints
+## REST API
 
-With the generic default slug (`extraction`):
+Both endpoints require `edit_post` capability on the target post.
 
-- `/{post-slug}/extraction` — markdown output
-- `/{post-slug}/text` — plain text output
+| Method | Endpoint                                 | Description                                                                                                                                          |
+| ------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST` | `/wp-json/prc-pdf-extraction/v1/convert` | Schedule an async extraction job. Body: `post_id`, `attachment_id`. Returns `job_id` and `status`. Idempotent — returns `pending` if already queued. |
+| `GET`  | `/wp-json/prc-pdf-extraction/v1/status`  | Check extraction status. Params: `post_id`, `attachment_id`. Returns `status` (`none`, `pending`, `complete`) and `extraction_id`.                   |
 
-With the PRC filter (`topline`):
-
-- `/{post-slug}/topline` — markdown output
-- `/{post-slug}/text` — plain text output
-
-## Testing
+## WP-CLI Commands
 
 ```bash
-# Install dependencies
-cd plugins/prc-pdf-extraction
-composer install
+# Process a single post's topline PDF
+wp prc-pdf-extraction process --post_id=123
 
-# Run all tests (local)
-composer test
+# Force reprocess (overwrites existing extraction)
+wp prc-pdf-extraction process --post_id=123 --force
 
-# Run all tests inside VIP Docker container
-npm run test:php
+# Test with a local PDF file without saving to the database
+wp prc-pdf-extraction test-file --file=/path/to/test.pdf
 
-# Run specific test file
-vip dev-env shell --slug=prc-platform -- bash -c \
-  "cd /wp/wp-content/plugins/prc-pdf-extraction && \
-   vendor/bin/phpunit --configuration phpunit-vip.xml.dist \
-   --filter=test_post_type_registered"
+# Preview bulk scheduling across all posts with reportMaterials (dry-run is default)
+wp prc-pdf-extraction bulk-process
 
-# Multisite
-composer test-ms
+# Enqueue bulk extraction jobs
+wp prc-pdf-extraction bulk-process --dry-run=false
+
+# Resume a bulk run after interruption from a specific post ID
+wp prc-pdf-extraction bulk-process --dry-run=false --start-id=12345
+
+# List configured OCR providers and their availability
+wp prc-pdf-extraction list-providers
+
+# Check extraction status for a post
+wp prc-pdf-extraction list-extractions --post_id=123
+
+# Validate an existing extraction post
+wp prc-pdf-extraction validate --post_id=456
+
+# Estimate OCR cost before running
+wp prc-pdf-extraction estimate-cost --post_id=123
 ```
 
-### Test coverage
+### Provider-specific options
 
-| Suite              | Tests  | Notes                                                                                                     |
-| ------------------ | ------ | --------------------------------------------------------------------------------------------------------- |
-| Plugin core        | 3      | Constants, class existence                                                                                |
-| Content type       | 8      | Post type registration, meta fields                                                                       |
-| Utility functions  | 7      | `get_extraction_materials`, `get_extraction_material_by_index`, `validate_extraction_material_attachment` |
-| Admin              | 14     | Meta boxes, labels, capabilities                                                                          |
-| Extraction service | 20     | Material parsing, save/update, cleanup                                                                    |
-| Action Scheduler   | 6      | Schedule, process, idempotency                                                                            |
-| Content discovery  | 6      | Alternate links, JSON-LD, robots.txt                                                                      |
-| OCR providers      | varies | Claude, quality validator, output validator                                                               |
+```bash
+# Force a specific OCR provider (bypasses orchestrator priority)
+wp prc-pdf-extraction process --post_id=123 --provider=claude
+wp prc-pdf-extraction process --post_id=123 --provider=gemini
 
-19 tests are skipped on PHP 8.2+ due to a WordPress core serialization bug (`SERIALIZATION_FORMAT_USE_UNSERIALIZE`). All affected functionality works correctly in production.
+# Override the Gemini model for a single test run
+wp prc-pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
 
-## License
+# Show Markdown output instead of plain text in test-file
+wp prc-pdf-extraction test-file --file=/path/to/test.pdf --show-markdown
+```
 
-GPL-2.0+
+## Stored Post Meta
 
-## Credits
+Each `pdf_extraction` post stores the following meta (all exposed via REST):
 
-Developed by Pew Research Center
+| Key                            | Type    | Description                                           |
+| ------------------------------ | ------- | ----------------------------------------------------- |
+| `_pdf_source_attachment_id`    | integer | WP attachment ID of the source PDF                    |
+| `_pdf_source_url`              | string  | Source PDF URL from `reportMaterials`                 |
+| `_pdf_source_label`            | string  | Label from `reportMaterials`                          |
+| `_ocr_provider_used`           | string  | Provider that produced the extraction (e.g. `claude`) |
+| `_ocr_confidence_score`        | float   | Confidence score 0–1                                  |
+| `_extraction_date`             | string  | MySQL timestamp of the extraction                     |
+| `_extraction_version`          | string  | Plugin version used                                   |
+| `_extracted_text_plain`        | string  | Plain text output                                     |
+| `_extracted_text_markdown`     | string  | Markdown output                                       |
+| `_validation_status`           | string  | `passed`, `failed`, or `warning`                      |
+| `_validation_issues`           | string  | JSON-encoded array of issue strings                   |
+| `_processing_cost_usd`         | float   | Estimated API cost in USD                             |
+| `_character_count`             | integer | Total character count of extracted text               |
+| `_extraction_duration_seconds` | float   | Time taken for the extraction in seconds              |
+
+## Troubleshooting
+
+### Extraction fails with "file not found (may have expired)"
+
+**Symptom**: Claude provider throws an extraction error referencing an expired file. Logs show `Claude API: file not found (may have expired)`.
+
+**Cause**: Claude's Files API caches uploaded PDFs for approximately 30 days. The `file_id` is stored on the WP attachment as `_claude_file_id`. When the file expires on Anthropic's end, subsequent calls referencing the cached `file_id` return a 404.
+
+**Fix**: The provider automatically retries once by deleting the stale `_claude_file_id` meta and re-uploading the file. If you need to force a manual reset, delete the `_claude_file_id` post meta from the attachment, then trigger a new extraction.
+
+### No OCR providers available
+
+**Symptom**: `wp prc-pdf-extraction list-providers` shows no providers, or extraction returns `no_providers` WP_Error.
+
+**Cause**: Neither `ANTHROPIC_API_KEY` nor `GOOGLE_API_KEY` is defined in `vip-config/keys-and-tokens.php`.
+
+**Fix**: Add at least one key to `vip-config/keys-and-tokens.php`. Claude is the preferred primary provider; Gemini is a capable fallback.
+
+### Bulk process enqueues no jobs
+
+**Symptom**: `bulk-process` reports 0 jobs scheduled even though posts exist with topline materials.
+
+**Cause**: Action Scheduler is not active, or posts have `reportMaterials` meta but no entries with `type === 'topline'`, or all toplines already have extractions (and `--force` was not passed).
+
+**Fix**: Confirm Action Scheduler is loaded (`function_exists('as_enqueue_async_action')`). Run with `--dry-run=false --force` to bypass the existing-extraction check.
+
+### Local dev PDF downloads pull from production
+
+**Symptom**: During local development, PDF downloads succeed but the file comes from `www.pewresearch.org` rather than the local environment.
+
+**Cause**: `Extraction_Service::download_remote_pdf()` detects `.vipdev.lndo.site` URLs and swaps them for the production URL. This is intentional — local environments typically don't have the uploaded PDF files locally.
+
+**Fix**: Pass `--file=/path/to/local.pdf` to `wp prc-pdf-extraction process` to use a local file and skip the download entirely.
