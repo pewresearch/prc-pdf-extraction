@@ -1,6 +1,6 @@
 <?php
 /**
- * Meta Boxes for Toplines
+ * Meta Boxes for PDF Extraction
  *
  * Provides custom meta boxes for easier editing of extraction metadata.
  *
@@ -65,9 +65,9 @@ class Meta_Boxes {
 			return;
 		}
 
-		$edit_link = get_edit_post_link( $parent_id );
-		$view_link = get_permalink( $parent_id );
-		$post_type_obj = get_post_type_object( $parent->post_type );
+		$edit_link       = get_edit_post_link( $parent_id );
+		$view_link       = get_permalink( $parent_id );
+		$post_type_obj   = get_post_type_object( $parent->post_type );
 		$post_type_label = $post_type_obj ? $post_type_obj->labels->singular_name : $parent->post_type;
 		?>
 		<p class="post-attributes-label-wrapper parent-article-label-wrapper">
@@ -126,9 +126,9 @@ class Meta_Boxes {
 		add_meta_box(
 			'prc_validation_results',
 			__( 'Validation Results', 'prc-pdf-extraction' ),
+			array( $this, 'render_validation_results_meta_box' ),
 			$post_type,
-			'side',
-			'default'
+			'side'
 		);
 
 		// Processing Metadata
@@ -301,7 +301,7 @@ class Meta_Boxes {
 	 * @param \WP_Post $post The post object.
 	 */
 	public function render_processing_metadata_meta_box( $post ) {
-		$extraction_date    = get_post_meta( $post->ID, '_extraction_date', true );
+		$extraction_date     = get_post_meta( $post->ID, '_extraction_date', true );
 		$extraction_version  = get_post_meta( $post->ID, '_extraction_version', true );
 		$processing_cost     = get_post_meta( $post->ID, '_processing_cost_usd', true );
 		$extraction_duration = get_post_meta( $post->ID, '_extraction_duration_seconds', true );

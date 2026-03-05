@@ -1,6 +1,6 @@
 <?php
 /**
- * REST API for PRC Toplines
+ * REST API for PRC PDF Extraction
  *
  * Exposes endpoints for triggering topline PDF conversion from the block editor.
  *
@@ -105,7 +105,7 @@ class REST_API {
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
-				__( 'You do not have permission to convert toplines for this post.', 'prc-pdf-extraction' ),
+				__( 'You do not have permission to convert PDF for this post.', 'prc-pdf-extraction' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -140,6 +140,10 @@ class REST_API {
 				__( 'Attachment not found.', 'prc-pdf-extraction' ),
 				array( 'status' => 404 )
 			);
+		}
+
+		if ( 'application/pdf' !== get_post_mime_type( $attachment_id ) ) {
+			return new \WP_Error( 'invalid_mime_type', __( 'Attachment must be a PDF file.', 'prc-pdf-extraction' ), array( 'status' => 400 ) );
 		}
 
 		// Idempotency: don't double-schedule.

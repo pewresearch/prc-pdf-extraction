@@ -189,9 +189,9 @@ class Content_Discovery {
 		echo "## Extractions\n\n";
 
 		foreach ( $extractions as $extraction ) {
-			echo "Title: " . $extraction['title'] . "\n";
-			echo "URL: " . $extraction['url'] . "\n";
-			echo "Date: " . $extraction['date'] . "\n";
+			echo 'Title: ' . str_replace( array( "\r", "\n" ), ' ', $extraction['title'] ) . "\n";
+			echo 'URL: ' . esc_url_raw( $extraction['url'] ) . "\n";
+			echo 'Date: ' . esc_html( $extraction['date'] ) . "\n";
 			echo "\n";
 		}
 
@@ -206,7 +206,7 @@ class Content_Discovery {
 	 * @return string Modified output.
 	 */
 	public function add_robots_txt_rules( $output, $public ) {
-		if ( '1' != $public ) {
+		if ( '1' !== (string) $public ) {
 			return $output;
 		}
 

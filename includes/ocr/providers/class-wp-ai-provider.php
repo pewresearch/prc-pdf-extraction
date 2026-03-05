@@ -1,6 +1,6 @@
 <?php
 /**
- * WP AI Provider for PRC Toplines
+ * WP AI Provider for PRC PDF Extraction
  *
  * Uses the WordPress AI Client (wp-ai-client) for model-agnostic PDF extraction.
  * Supports any configured provider (Google, Anthropic, OpenAI, etc.) with PDF/document understanding.
@@ -109,11 +109,11 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 
 		// Gutenberg call - block HTML for post_content
 		$gutenberg_prompt = $this->build_gutenberg_prompt();
-		$gutenberg_text  = $this->call_ai( $file_path, $gutenberg_prompt, $options, 'Gutenberg block HTML' );
+		$gutenberg_text   = $this->call_ai( $file_path, $gutenberg_prompt, $options, 'Gutenberg block HTML' );
 
 		// Markdown call - for _extracted_text_markdown and derived plain text
 		$markdown_prompt = $this->build_markdown_prompt();
-		$markdown_text  = $this->call_ai( $file_path, $markdown_prompt, $options, 'markdown' );
+		$markdown_text   = $this->call_ai( $file_path, $markdown_prompt, $options, 'markdown' );
 
 		// Derive plain text from markdown
 		$plain_text = $this->markdown_to_plain( $markdown_text );
@@ -139,10 +139,10 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	/**
 	 * Make a single AI Client call with prompt + file.
 	 *
-	 * @param string                                        $file_path Path to PDF file.
-	 * @param string                                        $prompt    The extraction prompt text.
-	 * @param RequestOptions                                $options   Request options (e.g. timeout).
-	 * @param string                                        $label     Label for error messages.
+	 * @param string         $file_path Path to PDF file.
+	 * @param string         $prompt    The extraction prompt text.
+	 * @param RequestOptions $options   Request options (e.g. timeout).
+	 * @param string         $label     Label for error messages.
 	 * @return string Extracted text.
 	 * @throws Authentication_Exception If API credentials are invalid.
 	 * @throws Rate_Limit_Exception If rate limited.
@@ -194,7 +194,7 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	 * @return string The markdown prompt.
 	 */
 	private function build_markdown_prompt(): string {
-		return <<<PROMPT
+		return <<<'PROMPT'
 You are extracting text from a Pew Research Center survey topline document. This is a PDF containing survey questions, response options, and percentage data.
 
 Please extract ALL text from this document and format it as clean, well-structured Markdown following these rules:
@@ -217,7 +217,7 @@ PROMPT;
 	 * @return string The Gutenberg prompt.
 	 */
 	private function build_gutenberg_prompt(): string {
-		return <<<PROMPT
+		return <<<'PROMPT'
 Extract ALL text from this Pew Research Center survey topline PDF and format it as WordPress Gutenberg block HTML.
 
 BLOCK FORMATS TO USE:

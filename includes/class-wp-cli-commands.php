@@ -1,6 +1,6 @@
 <?php
 /**
- * WP-CLI Commands for PRC Toplines
+ * WP-CLI Commands for PRC PDF Extraction
  *
  * @package PRC_PDF_Extraction
  */
@@ -13,7 +13,7 @@ use PRC\Platform\PDF_Extraction\OCR\Domain\OCR_Response;
 use WP_CLI;
 
 /**
- * WP-CLI commands for managing PRC Toplines
+ * WP-CLI commands for managing PRC PDF Extraction
  */
 class WP_CLI_Commands {
 	/**
@@ -152,12 +152,12 @@ class WP_CLI_Commands {
 	}
 
 	/**
-	 * List toplines for a post
+	 * List PDF extractions for a post
 	 *
 	 * ## OPTIONS
 	 *
 	 * --post_id=<post_id>
-	 * : The post ID to check for toplines
+	 * : The post ID to check for PDF extractions
 	 *
 	 * ## EXAMPLES
 	 *
@@ -202,7 +202,7 @@ class WP_CLI_Commands {
 	}
 
 	/**
-	 * Estimate cost for extracting text from a post's topline
+	 * Estimate cost for extracting text from a post's PDF
 	 *
 	 * ## OPTIONS
 	 *
@@ -291,7 +291,7 @@ class WP_CLI_Commands {
 		if ( ! empty( $validation_issues ) ) {
 			WP_CLI::line( '' );
 			WP_CLI::line( 'Issues:' );
-			$issues = maybe_unserialize( $validation_issues );
+			$issues = json_decode( $validation_issues, true );
 			if ( is_array( $issues ) ) {
 				foreach ( $issues as $issue ) {
 					WP_CLI::line( "  - {$issue}" );
@@ -340,12 +340,12 @@ class WP_CLI_Commands {
 	 * @when after_wp_load
 	 */
 	public function process( $args, $assoc_args ) {
-		$post_id            = $assoc_args['post_id'] ?? null;
-		$local_file         = $assoc_args['file'] ?? null;
-		$dry_run            = isset( $assoc_args['dry-run'] );
-		$force              = isset( $assoc_args['force'] );
-		$provider_name      = $assoc_args['provider'] ?? null;
-		$insecure           = isset( $assoc_args['insecure'] );
+		$post_id         = $assoc_args['post_id'] ?? null;
+		$local_file      = $assoc_args['file'] ?? null;
+		$dry_run         = isset( $assoc_args['dry-run'] );
+		$force           = isset( $assoc_args['force'] );
+		$provider_name   = $assoc_args['provider'] ?? null;
+		$insecure        = isset( $assoc_args['insecure'] );
 		$use_form_parser = isset( $assoc_args['form-parser'] );
 
 		// Enable Form Parser mode if requested
@@ -364,7 +364,7 @@ class WP_CLI_Commands {
 
 		WP_CLI::line( "Processing post {$post_id}: {$post->post_title}" );
 
-		// Get toplines
+		// Get PDF extractions
 		$toplines = $this->get_extraction_materials_from_post( $post_id );
 
 		if ( empty( $toplines ) ) {
@@ -395,7 +395,7 @@ class WP_CLI_Commands {
 			$is_temp_file = false;
 		} else {
 			$attachment_id_for_extraction = (int) $topline['attachmentId'];
-			$file_path = $this->get_file_path_from_attachment( $topline['attachmentId'], $topline, $insecure );
+			$file_path                    = $this->get_file_path_from_attachment( $topline['attachmentId'], $topline, $insecure );
 			if ( ! $file_path ) {
 				WP_CLI::error( 'Could not get file path for attachment' );
 			}
@@ -464,20 +464,20 @@ class WP_CLI_Commands {
 	}
 
 	/**
-	 * Get toplines from a post's reportMaterials meta.
+	 * Get PDF extractions from a post's reportMaterials meta. (Topline material type)
 	 *
 	 * @param int $post_id Post ID.
-	 * @return array Array of topline materials.
+	 * @return array Array of PDF extraction materials.
 	 */
 	private function get_extraction_materials_from_post( int $post_id ): array {
 		return $this->service->get_extraction_materials_from_post( $post_id );
 	}
 
 	/**
-	 * Get an existing extraction post for a topline by its attachment ID.
+	 * Get an existing extraction post for a PDF extraction by its attachment ID.
 	 *
 	 * @param int $parent_id     Parent post ID.
-	 * @param int $attachment_id Attachment ID of the topline material.
+	 * @param int $attachment_id Attachment ID of the PDF extraction material.
 	 * @return int|null Extraction post ID or null.
 	 */
 	private function get_extraction_for_material( int $parent_id, int $attachment_id ): ?int {
@@ -485,13 +485,13 @@ class WP_CLI_Commands {
 	}
 
 	/**
-	 * Get a file path for a topline attachment.
+	 * Get a file path for a PDF extraction attachment.
 	 *
 	 * Tries the local WordPress uploads directory first, then downloads from
-	 * the remote URL in the topline data.
+	 * the remote URL in the PDF extraction data.
 	 *
 	 * @param int   $attachment_id Attachment ID.
-	 * @param array $topline       Optional topline data with URL.
+	 * @param array $topline       Optional PDF extraction data with URL.
 	 * @param bool  $insecure      Allow insecure SSL connections.
 	 * @return string|false File path or false.
 	 */

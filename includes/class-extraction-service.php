@@ -150,6 +150,11 @@ class Extraction_Service {
 	 * @return string|false Temporary file path, or false on failure.
 	 */
 	public function download_remote_pdf( string $url, int $attachment_id, bool $insecure = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		$parsed = wp_parse_url( $url );
+		if ( ! in_array( $parsed['scheme'] ?? '', array( 'http', 'https' ), true ) ) {
+			return false;
+		}
+
 		$temp_dir  = sys_get_temp_dir();
 		$temp_file = $temp_dir . '/prc-pdf-extraction-' . $attachment_id . '.pdf';
 

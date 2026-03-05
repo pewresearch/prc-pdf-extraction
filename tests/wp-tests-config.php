@@ -33,7 +33,7 @@ define( 'WP_TESTS_MULTISITE', false );
 // Domain and email for tests
 define( 'WP_TESTS_DOMAIN', 'prc-platform.vipdev.lndo.site' );
 define( 'WP_TESTS_EMAIL', 'admin@prc-platform.vipdev.lndo.site' );
-define( 'WP_TESTS_TITLE', 'PRC Toplines Tests' );
+define( 'WP_TESTS_TITLE', 'PRC PDF Extraction Tests' );
 
 // PHP binary path
 define( 'WP_PHP_BINARY', 'php' );

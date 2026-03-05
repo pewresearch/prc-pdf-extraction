@@ -5,6 +5,10 @@
  * @package PRC_PDF_Extraction
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // Get post ID from query var
 $post_id = get_query_var( 'extraction_post' );
 
@@ -51,10 +55,11 @@ $date       = get_post_meta( $extraction->ID, '_extraction_date', true );
 // Set headers
 header( 'Content-Type: text/plain; charset=UTF-8' );
 header( 'Cache-Control: public, max-age=86400' ); // 24 hours
+header( 'X-Content-Type-Options: nosniff' );
 header( 'X-OCR-Provider: ' . esc_attr( $provider ) );
 header( 'X-OCR-Confidence: ' . esc_attr( $confidence ) );
 header( 'X-Extraction-Date: ' . esc_attr( $date ) );
 
 // Output text
-echo $text; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+echo esc_html( $text );
 exit;

@@ -7,6 +7,10 @@
  * @package PRC_PDF_Extraction
  */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 // Get post ID from query var
 $post_id = get_query_var( 'extraction_post' );
 
@@ -58,6 +62,7 @@ $parent_post = get_post( $post_id );
 // Set headers
 header( 'Content-Type: text/markdown; charset=UTF-8' );
 header( 'Cache-Control: public, max-age=86400' ); // 24 hours
+header( 'X-Content-Type-Options: nosniff' );
 header( 'X-OCR-Provider: ' . esc_attr( $provider ) );
 header( 'X-OCR-Confidence: ' . esc_attr( $confidence ) );
 header( 'X-Extraction-Date: ' . esc_attr( $date ) );

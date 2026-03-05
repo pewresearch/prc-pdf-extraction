@@ -1,6 +1,6 @@
 <?php
 /**
- * Gemini Provider for PRC Toplines
+ * Gemini Provider for PRC PDF Extraction
  *
  * Uses Google Gemini's native PDF understanding to extract text
  * and return markdown-formatted output. Supports both whole-PDF and
@@ -77,9 +77,9 @@ class Gemini_Provider implements OCR_Provider_Interface {
 	 * @param string|null $model Optional model name override (e.g. 'gemini-2.5-flash').
 	 */
 	public function __construct( ?string $model = null ) {
-		$this->api_key = defined( 'GOOGLE_API_KEY' ) ? GOOGLE_API_KEY : '';
+		$this->api_key      = defined( 'GOOGLE_API_KEY' ) ? GOOGLE_API_KEY : '';
 		$this->file_encoder = new File_Encoder();
-		$this->model = $model ?? self::DEFAULT_MODEL;
+		$this->model        = $model ?? self::DEFAULT_MODEL;
 	}
 
 	/**
@@ -235,7 +235,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 			throw new Extraction_Failed_Exception( "Failed to read file: {$file_path}" );
 		}
 
-		$url = self::FILES_API_ENDPOINT . '?uploadType=media&key=' . $this->api_key;
+		$url = self::FILES_API_ENDPOINT . '?uploadType=media';
 
 		$response = wp_remote_post(
 			$url,
@@ -243,6 +243,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 				'headers' => array(
 					'Content-Type'   => $mime_type,
 					'Content-Length' => (string) strlen( $body ),
+					'x-goog-api-key' => $this->api_key,
 				),
 				'body'    => $body,
 				'timeout' => apply_filters( 'prc_pdf_extraction_ocr_timeout', 120 ),
@@ -255,9 +256,9 @@ class Gemini_Provider implements OCR_Provider_Interface {
 			);
 		}
 
-		$status_code = wp_remote_retrieve_response_code( $response );
+		$status_code   = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $response_body, true );
+		$data          = json_decode( $response_body, true );
 
 		if ( 401 === $status_code || 403 === $status_code ) {
 			throw new Authentication_Exception( 'Invalid Gemini API key' );
@@ -286,9 +287,9 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		$waited   = 0;
 		while ( ! empty( $name ) && ( $data['file']['state'] ?? $data['state'] ?? 'ACTIVE' ) === 'PROCESSING' && $waited < $max_wait ) {
 			sleep( 1 );
-			$waited += 1;
-			$get_url = 'https://generativelanguage.googleapis.com/v1beta/' . $name . '?key=' . $this->api_key;
-			$get_resp = wp_remote_get( $get_url, array( 'timeout' => 10 ) );
+			$waited  += 1;
+			$get_url  = 'https://generativelanguage.googleapis.com/v1beta/' . $name;
+			$get_resp = wp_remote_get( $get_url, array( 'timeout' => 10, 'headers' => array( 'x-goog-api-key' => $this->api_key ) ) );
 			if ( ! is_wp_error( $get_resp ) && wp_remote_retrieve_response_code( $get_resp ) === 200 ) {
 				$data = json_decode( wp_remote_retrieve_body( $get_resp ), true );
 				$uri  = $data['uri'] ?? $uri;
@@ -316,13 +317,14 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		}
 
 		$name = $m[1];
-		$url  = 'https://generativelanguage.googleapis.com/v1beta/' . $name . '?key=' . $this->api_key;
+		$url  = 'https://generativelanguage.googleapis.com/v1beta/' . $name;
 
 		$response = wp_remote_request(
 			$url,
 			array(
 				'method'  => 'DELETE',
 				'timeout' => 10,
+				'headers' => array( 'x-goog-api-key' => $this->api_key ),
 			)
 		);
 
@@ -641,7 +643,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		);
 
 		$request_body = array(
-			'contents' => array(
+			'contents'         => array(
 				array( 'parts' => $parts ),
 			),
 			'generationConfig' => $generation_config,
@@ -673,7 +675,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 	 * @throws Extraction_Failed_Exception On request or parse failure.
 	 */
 	private function stream_request( string $body, int $timeout ): array {
-		$url = $this->get_stream_api_endpoint() . '?alt=sse&key=' . $this->api_key;
+		$url = $this->get_stream_api_endpoint() . '?alt=sse';
 
 		$buffer = '';
 
@@ -683,7 +685,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		}
 
 		$write_callback = function ( $ch, $data ) use ( &$buffer ) {
-			$len = strlen( $data );
+			$len     = strlen( $data );
 			$buffer .= $data;
 			return $len;
 		};
@@ -691,11 +693,11 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		curl_setopt_array(
 			$ch,
 			array(
-				CURLOPT_POST           => true,
-				CURLOPT_POSTFIELDS     => $body,
-				CURLOPT_HTTPHEADER     => array( 'Content-Type: application/json' ),
-				CURLOPT_TIMEOUT        => $timeout,
-				CURLOPT_WRITEFUNCTION  => $write_callback,
+				CURLOPT_POST          => true,
+				CURLOPT_POSTFIELDS    => $body,
+				CURLOPT_HTTPHEADER    => array( 'Content-Type: application/json', 'x-goog-api-key: ' . $this->api_key ),
+				CURLOPT_TIMEOUT       => $timeout,
+				CURLOPT_WRITEFUNCTION => $write_callback,
 			)
 		);
 
@@ -760,8 +762,8 @@ class Gemini_Provider implements OCR_Provider_Interface {
 			if ( ! is_array( $data ) || ! isset( $data['candidates'][0] ) ) {
 				continue;
 			}
-			$cand = $data['candidates'][0];
-			$last_finish = $cand['finishReason'] ?? $last_finish;
+			$cand            = $data['candidates'][0];
+			$last_finish     = $cand['finishReason'] ?? $last_finish;
 			$last_candidates = $cand;
 
 			if ( ! isset( $cand['content']['parts'] ) ) {
@@ -790,7 +792,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		$raw_data = array(
 			'candidates' => array(
 				array(
-					'content'     => array( 'parts' => array( array( 'text' => $text ) ) ),
+					'content'      => array( 'parts' => array( array( 'text' => $text ) ) ),
 					'finishReason' => $last_finish,
 				),
 			),

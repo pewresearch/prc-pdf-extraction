@@ -19,7 +19,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       prc-pdf-extraction
- * Requires Plugins:  prc-platform-core
+ * Requires Plugins:  prc-platform-core, prc-markdown-for-agents
  */
 
 namespace PRC\Platform\PDF_Extraction;
@@ -35,6 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Constants
 define( 'PRC_PDF_EXTRACTION_FILE', __FILE__ );
 define( 'PRC_PDF_EXTRACTION_DIR', __DIR__ );
+define( 'PRC_PDF_EXTRACTION_URL', plugin_dir_url( __FILE__ ) );
 define( 'PRC_PDF_EXTRACTION_VERSION', '1.0.0' );
 
 // Activation/Deactivation

@@ -51,7 +51,6 @@ class Bootstrap {
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-loader.php';
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-content-type.php';
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-meta-boxes.php';
-		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-admin.php';
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-rewrite-rules.php';
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-sitemap-integration.php';
 		require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-content-discovery.php';
@@ -112,9 +111,6 @@ class Bootstrap {
 
 		// Register meta boxes
 		$meta_boxes = new Meta_Boxes( $this->get_loader() );
-
-		// Register admin functionality (parent article display in Gutenberg)
-		$admin = new Admin( $this->get_loader() );
 
 		// Register rewrite rules for content endpoints
 		$rewrite_rules = new Rewrite_Rules( $this->get_loader() );
