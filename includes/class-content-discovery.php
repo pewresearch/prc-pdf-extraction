@@ -195,6 +195,16 @@ class Content_Discovery {
 			echo "\n";
 		}
 
+		/**
+		 * Allows other plugins to append sections to the llms.txt output.
+		 *
+		 * @param string $additional_sections Extra markdown to append.
+		 */
+		$additional_sections = apply_filters( 'prc_llms_txt_sections', '' );
+		if ( ! empty( $additional_sections ) ) {
+			echo $additional_sections; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		}
+
 		exit;
 	}
 
