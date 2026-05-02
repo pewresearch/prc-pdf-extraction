@@ -30,7 +30,7 @@ class OCR_Exception extends \Exception {
 		string $message = '',
 		string $error_identifier = 'ocr_error',
 		int $code = 0,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, $code, $previous );
 		$this->error_identifier = $error_identifier;

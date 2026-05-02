@@ -21,7 +21,7 @@ class Provider_Unavailable_Exception extends OCR_Exception {
 	public function __construct(
 		string $message = 'OCR provider is unavailable',
 		int $code = 0,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, 'provider_unavailable', $code, $previous );
 	}

@@ -12,6 +12,11 @@ namespace PRC\Platform\PDF_Extraction;
 
 use WP_CLI;
 
+// Bail when running outside VIP infrastructure (wp-env, Playground): the parent class is unavailable.
+if ( ! class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
+	return;
+}
+
 /**
  * Bulk_CLI_Command extends WPCOM_VIP_CLI_Command and registers the
  * `wp prc-pdf-extraction bulk-process` subcommand.

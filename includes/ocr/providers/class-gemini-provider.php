@@ -77,7 +77,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 	 * @param string|null $model Optional model name override (e.g. 'gemini-2.5-flash').
 	 */
 	public function __construct( ?string $model = null ) {
-		$this->api_key      = defined( 'GOOGLE_API_KEY' ) ? GOOGLE_API_KEY : '';
+		$this->api_key      = defined( 'PRC_PLATFORM_GOOGLE_API_KEY' ) ? PRC_PLATFORM_GOOGLE_API_KEY : '';
 		$this->file_encoder = new File_Encoder();
 		$this->model        = $model ?? self::DEFAULT_MODEL;
 	}
@@ -289,7 +289,13 @@ class Gemini_Provider implements OCR_Provider_Interface {
 			sleep( 1 );
 			$waited  += 1;
 			$get_url  = 'https://generativelanguage.googleapis.com/v1beta/' . $name;
-			$get_resp = wp_remote_get( $get_url, array( 'timeout' => 10, 'headers' => array( 'x-goog-api-key' => $this->api_key ) ) );
+			$get_resp = wp_remote_get(
+				$get_url,
+				array(
+					'timeout' => 10,
+					'headers' => array( 'x-goog-api-key' => $this->api_key ),
+				)
+			);
 			if ( ! is_wp_error( $get_resp ) && wp_remote_retrieve_response_code( $get_resp ) === 200 ) {
 				$data = json_decode( wp_remote_retrieve_body( $get_resp ), true );
 				$uri  = $data['uri'] ?? $uri;

@@ -44,48 +44,53 @@ class Sitemap_Integration {
 	}
 
 	/**
-	 * Add alternate format URLs to sitemap entries
+	 * Add alternate format URLs to sitemap entries for topline posts.
 	 *
-	 * Adds <xhtml:link rel="alternate"> tags for text, markdown, and topline formats.
+	 * Adds <xhtml:link rel="alternate"> elements for text, markdown, and topline
+	 * formats. The xmlns:xhtml namespace is declared on the root <urlset> element
+	 * by prc-schema-sitemap so these children are valid.
 	 *
-	 * @param array $url_data Sitemap URL entry data.
-	 * @param int   $post_id Post ID.
-	 * @return array Modified URL entry.
+	 * @param SimpleXMLElement $entry_xml Sitemap <url> entry XML element.
+	 * @param int              $post_id   Post ID being processed. Defaults to 0 (resolved via get_the_ID()).
+	 * @return SimpleXMLElement The (possibly modified) entry XML element.
 	 */
-	public function add_alternate_formats( $url_data, $post_id ) {
-		// Only add alternates for topline posts
-		if ( 'topline' !== get_post_type( $post_id ) ) {
-			return $url_data;
+	public function add_alternate_formats( $entry_xml, $post_id = 0 ) {
+		if ( ! $post_id ) {
+			$post_id = get_the_ID();
 		}
 
-		// Get the parent post ID to build alternate URLs
+		if ( ! $post_id ) {
+			return $entry_xml;
+		}
+
+		// Only add alternates for topline posts.
+		if ( Content_Type::get_post_type() !== get_post_type( $post_id ) ) {
+			return $entry_xml;
+		}
+
+		// Require a parent post to build alternate URLs from.
 		$post = get_post( $post_id );
 		if ( ! $post || ! $post->post_parent ) {
-			return $url_data;
+			return $entry_xml;
 		}
 
 		$parent_id = $post->post_parent;
 
-		// Initialize alternates array if not exists
-		if ( ! isset( $url_data['alternates'] ) ) {
-			$url_data['alternates'] = array();
-		}
-
-		// Add alternate format URLs
 		$formats = array(
 			'text'     => 'text/plain',
 			'markdown' => 'text/markdown',
 			'topline'  => 'text/markdown',
 		);
 
+		$xhtml_ns = 'http://www.w3.org/1999/xhtml';
+
 		foreach ( $formats as $format => $mime_type ) {
-			$url_data['alternates'][] = array(
-				'href' => home_url( "/topline/{$parent_id}/{$format}" ),
-				'type' => $mime_type,
-				'rel'  => 'alternate',
-			);
+			$link = $entry_xml->addChild( 'xhtml:link', '', $xhtml_ns );
+			$link->addAttribute( 'rel', 'alternate' );
+			$link->addAttribute( 'type', $mime_type );
+			$link->addAttribute( 'href', home_url( "/topline/{$parent_id}/{$format}" ) );
 		}
 
-		return $url_data;
+		return $entry_xml;
 	}
 }

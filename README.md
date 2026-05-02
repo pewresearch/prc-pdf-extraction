@@ -9,7 +9,7 @@ This plugin reads `topline`-type entries from a parent post's `reportMaterials` 
 ### Dependencies
 
 -   **Upstream**: `prc-platform-core` (required), `prc-markdown-for-agents` (optional — Markdown endpoint falls back to a legacy template when absent), Action Scheduler (required for async processing)
--   **External APIs**: `ANTHROPIC_API_KEY` for Claude (primary provider), `GOOGLE_API_KEY` for Gemini (fallback provider)
+-   **External APIs**: `PRC_PLATFORM_ANTHROPIC_API_KEY` for Claude (primary provider), `PRC_PLATFORM_GOOGLE_API_KEY` for Gemini (fallback provider)
 -   **Downstream**: Nothing depends on this plugin directly; consumers access extractions through public URL endpoints or via the `pdf_extraction` post type.
 
 ## Architecture
@@ -165,7 +165,7 @@ Each `pdf_extraction` post stores the following meta (all exposed via REST):
 
 **Symptom**: `wp prc-pdf-extraction list-providers` shows no providers, or extraction returns `no_providers` WP_Error.
 
-**Cause**: Neither `ANTHROPIC_API_KEY` nor `GOOGLE_API_KEY` is defined in `vip-config/keys-and-tokens.php`.
+**Cause**: Neither `PRC_PLATFORM_ANTHROPIC_API_KEY` nor `PRC_PLATFORM_GOOGLE_API_KEY` is defined in `vip-config/keys-and-tokens.php`.
 
 **Fix**: Add at least one key to `vip-config/keys-and-tokens.php`. Claude is the preferred primary provider; Gemini is a capable fallback.
 

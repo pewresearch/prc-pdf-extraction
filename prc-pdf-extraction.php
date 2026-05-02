@@ -19,7 +19,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       prc-pdf-extraction
- * Requires Plugins:  prc-platform-core, prc-markdown-for-agents
+ * Requires Plugins:  prc-scripts, prc-markdown-for-agents
  */
 
 namespace PRC\Platform\PDF_Extraction;
@@ -31,6 +31,19 @@ if ( ! defined( 'WPINC' ) ) {
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+if ( ! defined( 'DEFAULT_TECHNICAL_CONTACT' ) ) {
+	define( 'DEFAULT_TECHNICAL_CONTACT', 'webdev@pewresearch.org' );
+}
+
+// Load the Jetpack Autoloader so runtime version-selection can pick the
+// highest version across all plugins that ship the same library dep
+// (see .cursor/plans/composer-shape-b-migration_0e4e9991.plan.md).
+$prc_pdf_extraction_autoloader = __DIR__ . '/vendor/autoload_packages.php';
+if ( file_exists( $prc_pdf_extraction_autoloader ) ) {
+	require_once $prc_pdf_extraction_autoloader;
+}
+unset( $prc_pdf_extraction_autoloader );
 
 // Constants
 define( 'PRC_PDF_EXTRACTION_FILE', __FILE__ );

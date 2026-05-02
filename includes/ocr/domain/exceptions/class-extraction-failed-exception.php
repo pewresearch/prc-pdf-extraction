@@ -21,7 +21,7 @@ class Extraction_Failed_Exception extends OCR_Exception {
 	public function __construct(
 		string $message = 'OCR extraction failed',
 		int $code = 0,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, 'extraction_failed', $code, $previous );
 	}

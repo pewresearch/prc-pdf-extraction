@@ -21,7 +21,7 @@ class Invalid_File_Exception extends OCR_Exception {
 	public function __construct(
 		string $message = 'Invalid file',
 		int $code = 0,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, 'invalid_file', $code, $previous );
 	}

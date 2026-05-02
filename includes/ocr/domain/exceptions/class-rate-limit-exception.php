@@ -21,7 +21,7 @@ class Rate_Limit_Exception extends OCR_Exception {
 	public function __construct(
 		string $message = 'Rate limit exceeded',
 		int $code = 429,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, 'rate_limit_exceeded', $code, $previous );
 	}

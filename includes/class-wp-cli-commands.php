@@ -44,8 +44,8 @@ class WP_CLI_Commands {
 	 * V2 uses Gemini's native PDF handling — no GhostScript or system binaries required.
 	 */
 	private function check_system_dependencies(): void {
-		if ( ! defined( 'GOOGLE_API_KEY' ) || ! GOOGLE_API_KEY ) {
-			WP_CLI::warning( 'GOOGLE_API_KEY is not defined. V2 pipeline will fall back to legacy extraction.' );
+		if ( ! defined( 'PRC_PLATFORM_GOOGLE_API_KEY' ) || ! PRC_PLATFORM_GOOGLE_API_KEY ) {
+			WP_CLI::warning( 'PRC_PLATFORM_GOOGLE_API_KEY is not defined. V2 pipeline will fall back to legacy extraction.' );
 		}
 	}
 

@@ -15,7 +15,6 @@ use PRC\Platform\PDF_Extraction\OCR\Domain\OCR_Response;
 use PRC\Platform\PDF_Extraction\OCR\Domain\Exceptions\Authentication_Exception;
 use PRC\Platform\PDF_Extraction\OCR\Domain\Exceptions\Extraction_Failed_Exception;
 use PRC\Platform\PDF_Extraction\OCR\Domain\Exceptions\Rate_Limit_Exception;
-use WordPress\AI_Client\AI_Client;
 use WordPress\AiClient\Providers\Http\DTO\RequestOptions;
 
 /**
@@ -54,12 +53,16 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	 * @return bool
 	 */
 	public function is_available(): bool {
-		if ( ! class_exists( 'WordPress\AI_Client\AI_Client' ) ) {
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
 			return false;
 		}
 
 		try {
-			$prompt = AI_Client::prompt( 'test' )->using_temperature( 0.1 );
+			$builder = wp_ai_client_prompt( 'test' );
+			if ( is_wp_error( $builder ) ) {
+				return false;
+			}
+			$prompt = $builder->using_temperature( 0.1 );
 			return $prompt->is_supported_for_text_generation();
 		} catch ( \Throwable $e ) {
 			return false;
@@ -150,12 +153,22 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	 */
 	private function call_ai( string $file_path, string $prompt, RequestOptions $options, string $label ): string {
 		try {
-			$text = AI_Client::prompt( $prompt )
+			$builder = wp_ai_client_prompt( $prompt );
+			if ( is_wp_error( $builder ) ) {
+				throw new \Exception( $builder->get_error_message() );
+			}
+
+			$text = $builder
 				->with_file( $file_path, 'application/pdf' )
 				->using_temperature( 0.1 )
-				->using_model_preference( 'gemini-3-flash-preview', 'claude-sonnet-4-5', 'gpt-4.1' )
+				->using_model_preference( 'claude-opus-4-7', 'claude-sonnet-4-6', 'gemini-3-flash-preview' )
 				->using_request_options( $options )
 				->generate_text();
+
+			if ( is_wp_error( $text ) ) {
+				throw new \Exception( $text->get_error_message() );
+			}
+
 			return trim( (string) $text );
 		} catch ( \Exception $e ) {
 			$this->translate_exception( $e, $label );

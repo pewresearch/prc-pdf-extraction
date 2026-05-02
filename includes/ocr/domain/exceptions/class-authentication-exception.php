@@ -21,7 +21,7 @@ class Authentication_Exception extends OCR_Exception {
 	public function __construct(
 		string $message = 'Authentication failed',
 		int $code = 401,
-		\Throwable $previous = null
+		?\Throwable $previous = null
 	) {
 		parent::__construct( $message, 'authentication_failed', $code, $previous );
 	}

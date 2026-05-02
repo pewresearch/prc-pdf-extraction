@@ -35,7 +35,7 @@ class OCR_Orchestrator {
 	 *
 	 * @param Quality_Validator|null $validator Optional quality validator.
 	 */
-	public function __construct( Quality_Validator $validator = null ) {
+	public function __construct( ?Quality_Validator $validator = null ) {
 		$this->validator = $validator ?? new Quality_Validator();
 		$this->register_providers();
 	}
@@ -47,19 +47,19 @@ class OCR_Orchestrator {
 		$providers = array();
 
 		// Register Claude provider if configured (primary: native PDF document understanding, priority 4)
-		if ( defined( 'ANTHROPIC_API_KEY' ) && ANTHROPIC_API_KEY ) {
+		if ( defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) && PRC_PLATFORM_ANTHROPIC_API_KEY ) {
 			require_once __DIR__ . '/../providers/class-claude-provider.php';
 			$providers[] = new \PRC\Platform\PDF_Extraction\OCR\Providers\Claude_Provider();
 		}
 
 		// Register Gemini provider if configured (fallback: best PDF understanding + markdown output, priority 5)
-		if ( defined( 'GOOGLE_API_KEY' ) && GOOGLE_API_KEY ) {
+		if ( defined( 'PRC_PLATFORM_GOOGLE_API_KEY' ) && PRC_PLATFORM_GOOGLE_API_KEY ) {
 			require_once __DIR__ . '/../providers/class-gemini-provider.php';
 			$providers[] = new \PRC\Platform\PDF_Extraction\OCR\Providers\Gemini_Provider();
 		}
 
 		// Register WP AI provider if configured
-		if ( class_exists( 'WordPress\AI_Client\AI_Client' ) ) {
+		if ( function_exists( 'wp_ai_client_prompt' ) ) {
 			require_once __DIR__ . '/../providers/class-wp-ai-provider.php';
 			$providers[] = new \PRC\Platform\PDF_Extraction\OCR\Providers\WP_AI_Provider();
 		}

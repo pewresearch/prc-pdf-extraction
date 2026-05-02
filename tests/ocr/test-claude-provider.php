@@ -47,11 +47,11 @@ class Claude_Provider_Test extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test provider is unavailable when ANTHROPIC_API_KEY is not defined
+	 * Test provider is unavailable when PRC_PLATFORM_ANTHROPIC_API_KEY is not defined
 	 */
 	public function test_is_unavailable_without_key() {
 		$this->skip_on_php_82_if_needed();
-		// ANTHROPIC_API_KEY is not defined in test environment
+		// PRC_PLATFORM_ANTHROPIC_API_KEY is not defined in test environment
 		$provider = new Claude_Provider();
 		$this->assertFalse( $provider->is_available() );
 	}
@@ -61,8 +61,8 @@ class Claude_Provider_Test extends WP_UnitTestCase {
 	 */
 	public function test_estimate_cost_with_real_file() {
 		$this->skip_on_php_82_if_needed();
-		$provider  = new Claude_Provider();
-		$test_pdf  = dirname( __DIR__ ) . '/PR_2026.01.21_religion-in-latin-america_topline.pdf';
+		$provider = new Claude_Provider();
+		$test_pdf = dirname( __DIR__ ) . '/PR_2026.01.21_religion-in-latin-america_topline.pdf';
 
 		if ( ! file_exists( $test_pdf ) ) {
 			$this->markTestSkipped( 'Test PDF not found: ' . $test_pdf );
@@ -92,8 +92,8 @@ class Claude_Provider_Test extends WP_UnitTestCase {
 	public function test_extract_text_throws_for_missing_file() {
 		$this->skip_on_php_82_if_needed();
 
-		if ( ! defined( 'ANTHROPIC_API_KEY' ) || ! ANTHROPIC_API_KEY ) {
-			$this->markTestSkipped( 'ANTHROPIC_API_KEY not configured — skipping live API tests.' );
+		if ( ! defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) || ! PRC_PLATFORM_ANTHROPIC_API_KEY ) {
+			$this->markTestSkipped( 'PRC_PLATFORM_ANTHROPIC_API_KEY not configured — skipping live API tests.' );
 		}
 
 		$provider = new Claude_Provider();
