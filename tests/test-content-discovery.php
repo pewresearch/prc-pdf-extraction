@@ -157,12 +157,4 @@ class ContentDiscoveryTest extends WP_UnitTestCase {
 
 		$this->assertEquals( $initial, $output );
 	}
-
-	/**
-	 * Test query var llms_txt is registered.
-	 */
-	public function test_llms_txt_query_var_registered() {
-		$vars = apply_filters( 'query_vars', array() );
-		$this->assertContains( 'llms_txt', $vars );
-	}
 }

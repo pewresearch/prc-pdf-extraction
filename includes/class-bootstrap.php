@@ -118,8 +118,13 @@ class Bootstrap {
 		// Register sitemap integration
 		$sitemap = new Sitemap_Integration( $this->get_loader() );
 
-		// Register content discovery (meta tags, JSON-LD, LLMs.txt, robots.txt)
+		// Register content discovery (meta tags, JSON-LD, robots.txt)
 		$content_discovery = new Content_Discovery( $this->get_loader() );
+
+		if ( class_exists( 'PRC\Platform\Markdown_For_Agents\LLMs_Txt' ) ) {
+			require_once PRC_PDF_EXTRACTION_DIR . '/includes/class-llms-txt-section.php';
+			new Llms_Txt_Section( $this->get_loader() );
+		}
 
 		// Wire up prc-markdown-for-agents integration when that plugin is active.
 		if ( class_exists( 'PRC\Platform\Markdown_For_Agents\Markdown_Response' ) ) {
@@ -138,7 +143,9 @@ class Bootstrap {
 		// Register WP-CLI commands
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			\WP_CLI::add_command( 'prc-pdf-extraction', WP_CLI_Commands::class );
-			\WP_CLI::add_command( 'prc-pdf-extraction', Bulk_CLI_Command::class );
+			if ( class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
+				\WP_CLI::add_command( 'prc-pdf-extraction', Bulk_CLI_Command::class );
+			}
 		}
 	}
 

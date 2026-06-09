@@ -33,30 +33,7 @@ class Content_Discovery {
 
 		$this->loader->add_action( 'wp_head', $this, 'add_alternate_link_tags', 10 );
 		$this->loader->add_action( 'wp_head', $this, 'add_json_ld_structured_data', 11 );
-		$this->loader->add_action( 'parse_request', $this, 'maybe_serve_llms_txt', 1 );
 		$this->loader->add_filter( 'robots_txt', $this, 'add_robots_txt_rules', 10, 2 );
-		$this->loader->add_action( 'init', $this, 'register_llms_txt_rewrite' );
-		$this->loader->add_filter( 'query_vars', $this, 'add_llms_txt_query_var' );
-	}
-
-	/**
-	 * Register rewrite rule for /llms.txt
-	 *
-	 * @hook init
-	 */
-	public function register_llms_txt_rewrite() {
-		add_rewrite_rule( '^llms\.txt$', 'index.php?llms_txt=1', 'top' );
-	}
-
-	/**
-	 * Add query var for llms.txt
-	 *
-	 * @param array $vars Query vars.
-	 * @return array Modified query vars.
-	 */
-	public function add_llms_txt_query_var( $vars ) {
-		$vars[] = 'llms_txt';
-		return $vars;
 	}
 
 	/**
@@ -165,50 +142,6 @@ class Content_Discovery {
 	}
 
 	/**
-	 * Maybe serve the LLMs.txt endpoint.
-	 *
-	 * @param \WP $wp Current WordPress environment instance.
-	 */
-	public function maybe_serve_llms_txt( $wp ) {
-		if ( empty( $wp->query_vars['llms_txt'] ) || '1' !== $wp->query_vars['llms_txt'] ) {
-			return;
-		}
-
-		$extractions = $this->get_all_extractions();
-
-		header( 'Content-Type: text/plain; charset=utf-8' );
-		header( 'X-Robots-Tag: noindex' );
-
-		echo "# Pew Research Center - AI-Readable Content\n";
-		echo '# Generated: ' . gmdate( 'Y-m-d' ) . "\n";
-		echo '# ' . home_url( '/llms.txt' ) . "\n\n";
-		echo "## Available Formats\n";
-		$url_slug = Content_Type::get_url_slug();
-		echo "- /{$url_slug} - Markdown with YAML frontmatter\n";
-		echo "- /text    - Plain text extraction\n\n";
-		echo "## Extractions\n\n";
-
-		foreach ( $extractions as $extraction ) {
-			echo 'Title: ' . str_replace( array( "\r", "\n" ), ' ', $extraction['title'] ) . "\n";
-			echo 'URL: ' . esc_url_raw( $extraction['url'] ) . "\n";
-			echo 'Date: ' . esc_html( $extraction['date'] ) . "\n";
-			echo "\n";
-		}
-
-		/**
-		 * Allows other plugins to append sections to the llms.txt output.
-		 *
-		 * @param string $additional_sections Extra markdown to append.
-		 */
-		$additional_sections = apply_filters( 'prc_llms_txt_sections', '' );
-		if ( ! empty( $additional_sections ) ) {
-			echo $additional_sections; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		}
-
-		exit;
-	}
-
-	/**
 	 * Add Allow rules to robots.txt for topline, text, and markdown endpoints.
 	 *
 	 * @param string $output The robots.txt output.
@@ -250,51 +183,10 @@ class Content_Discovery {
 	/**
 	 * Get all published extractions for the LLMs.txt directory.
 	 *
+	 * @deprecated 2.0.0 Use Llms_Txt_Section instead.
 	 * @return array List of extraction entries with title, url, date.
 	 */
 	protected function get_all_extractions() {
-		$extraction_posts = get_posts(
-			array(
-				'post_type'   => Content_Type::get_post_type(),
-				'post_status' => 'publish',
-				'numberposts' => -1,
-				'orderby'     => 'date',
-				'order'       => 'DESC',
-			)
-		);
-
-		$extractions = array();
-
-		foreach ( $extraction_posts as $extraction_post ) {
-			$parent_id = $extraction_post->post_parent;
-			if ( ! $parent_id ) {
-				continue;
-			}
-
-			$parent = get_post( $parent_id );
-			if ( ! $parent || 'publish' !== $parent->post_status ) {
-				continue;
-			}
-
-			$permalink = get_permalink( $parent );
-			if ( ! $permalink ) {
-				continue;
-			}
-
-			$path   = wp_parse_url( $permalink, PHP_URL_PATH );
-			$base   = $path ? rtrim( $path, '/' ) : '';
-			$url_slug = Content_Type::get_url_slug();
-			$url    = home_url( $base . '/' . $url_slug );
-			$title  = get_the_title( $extraction_post );
-			$date   = get_the_date( 'Y-m-d', $extraction_post );
-
-			$extractions[] = array(
-				'title' => $title,
-				'url'   => $url,
-				'date'  => $date,
-			);
-		}
-
-		return $extractions;
+		return array();
 	}
 }
