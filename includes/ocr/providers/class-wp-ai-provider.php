@@ -158,10 +158,11 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 				throw new \Exception( $builder->get_error_message() );
 			}
 
+			// Prefer Claude Fable 5. Do not set temperature — Fable 5 rejects
+			// temperature/top_p/top_k with HTTP 400 (adaptive thinking is always on).
 			$text = $builder
 				->with_file( $file_path, 'application/pdf' )
-				->using_temperature( 0.1 )
-				->using_model_preference( 'claude-opus-4-7', 'claude-sonnet-4-6', 'gemini-3-flash-preview' )
+				->using_model_preference( 'claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'gemini-3-flash-preview' )
 				->using_request_options( $options )
 				->generate_text();
 

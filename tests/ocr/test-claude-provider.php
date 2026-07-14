@@ -129,7 +129,7 @@ class Claude_Provider_Test extends WP_UnitTestCase {
 	public function test_default_model() {
 		$this->skip_on_php_82_if_needed();
 		$provider = new Claude_Provider();
-		$this->assertEquals( 'claude-sonnet-4-6', $provider->get_model() );
+		$this->assertEquals( 'claude-fable-5', $provider->get_model() );
 	}
 
 	/**
@@ -137,7 +137,7 @@ class Claude_Provider_Test extends WP_UnitTestCase {
 	 */
 	public function test_custom_model_via_constructor() {
 		$this->skip_on_php_82_if_needed();
-		$provider = new Claude_Provider( 'claude-opus-4-6' );
-		$this->assertEquals( 'claude-opus-4-6', $provider->get_model() );
+		$provider = new Claude_Provider( 'claude-opus-4-8' );
+		$this->assertEquals( 'claude-opus-4-8', $provider->get_model() );
 	}
 }

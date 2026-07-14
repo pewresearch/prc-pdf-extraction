@@ -32,7 +32,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Default model name.
 	 */
-	const DEFAULT_MODEL = 'claude-sonnet-4-6';
+	const DEFAULT_MODEL = 'claude-fable-5';
 
 	/**
 	 * Anthropic Messages API endpoint.
@@ -85,7 +85,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Constructor.
 	 *
-	 * @param string|null $model Optional model name override (e.g. 'claude-opus-4-6').
+	 * @param string|null $model Optional model name override (e.g. 'claude-opus-4-8').
 	 */
 	public function __construct( ?string $model = null ) {
 		$this->api_key = defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) ? PRC_PLATFORM_ANTHROPIC_API_KEY : '';
@@ -131,19 +131,19 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Estimate cost for processing a file.
 	 *
-	 * Claude Sonnet pricing (as of 2025):
-	 * - Input: $3.00 per 1M tokens
-	 * - Output: $15.00 per 1M tokens
-	 * - Roughly $0.003-0.01 per page
+	 * Claude Fable 5 pricing (as of 2026):
+	 * - Input: $10.00 per 1M tokens
+	 * - Output: $50.00 per 1M tokens
+	 * - Roughly $0.01-0.03 per page
 	 *
 	 * @param string $file_path Path to PDF file.
 	 * @return float Estimated cost in USD.
 	 */
 	public function estimate_cost( string $file_path ): float {
 		$file_size = filesize( $file_path );
-		// Rough estimate: 1MB PDF ≈ 10 pages ≈ $0.03 (two calls)
+		// Rough estimate: 1MB PDF ≈ 10 pages ≈ $0.10 (two calls)
 		$pages = max( 1, ceil( $file_size / 100000 ) );
-		return $pages * 0.003;
+		return $pages * 0.01;
 	}
 
 	/**
@@ -556,14 +556,31 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Parse the Anthropic Messages API response.
 	 *
+	 * Claude Fable 5 may return HTTP 200 with stop_reason "refusal" when safety
+	 * classifiers decline the request. Treat that as an extraction failure so
+	 * the orchestrator can fall back to another provider.
+	 *
 	 * @param array $data Decoded JSON response.
 	 * @return array Array with 'text', 'was_truncated', and 'raw_data' keys.
+	 * @throws Extraction_Failed_Exception If the model refused the request.
 	 */
 	private function parse_response( array $data ): array {
 		$text          = '';
 		$was_truncated = false;
 
 		$stop_reason = $data['stop_reason'] ?? '';
+		if ( 'refusal' === $stop_reason ) {
+			$category = null;
+			if ( isset( $data['stop_details'] ) && is_array( $data['stop_details'] ) ) {
+				$category = $data['stop_details']['category'] ?? null;
+			}
+			throw new Extraction_Failed_Exception(
+				sprintf(
+					'Claude API refused the request%s',
+					$category ? ' (category: ' . $category . ')' : ''
+				)
+			);
+		}
 		if ( 'max_tokens' === $stop_reason ) {
 			$was_truncated = true;
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {

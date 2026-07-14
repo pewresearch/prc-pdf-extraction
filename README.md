@@ -61,7 +61,7 @@ The OCR layer uses a layered namespace under `PRC\Platform\PDF_Extraction\OCR`:
 | `prc_pdf_extraction_post_type`         | filter | Override the CPT slug (default: `pdf_extraction`)                                                 |
 | `prc_pdf_extraction_url_slug`          | filter | Override the public URL segment (default: `extraction`)                                           |
 | `prc_pdf_extraction_labels`            | filter | Override CPT label strings                                                                        |
-| `prc_pdf_extraction_claude_model`      | filter | Override the Claude model at runtime (default: `claude-sonnet-4-6`)                               |
+| `prc_pdf_extraction_claude_model`      | filter | Override the Claude model at runtime (default: `claude-fable-5`)                                  |
 | `prc_pdf_extraction_gemini_model`      | filter | Override the Gemini model at runtime                                                              |
 | `prc_pdf_extraction_claude_max_tokens` | filter | Override Claude `max_tokens` (default: 16384)                                                     |
 | `prc_pdf_extraction_ocr_timeout`       | filter | Override API request timeout in seconds (default: 120)                                            |
