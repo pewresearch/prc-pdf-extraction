@@ -86,48 +86,48 @@ Both endpoints require `edit_post` capability on the target post.
 
 ```bash
 # Process a single post's topline PDF
-wp prc-pdf-extraction process --post_id=123
+wp prc pdf-extraction process --post_id=123
 
 # Force reprocess (overwrites existing extraction)
-wp prc-pdf-extraction process --post_id=123 --force
+wp prc pdf-extraction process --post_id=123 --force
 
 # Test with a local PDF file without saving to the database
-wp prc-pdf-extraction test-file --file=/path/to/test.pdf
+wp prc pdf-extraction test-file --file=/path/to/test.pdf
 
 # Preview bulk scheduling across all posts with reportMaterials (dry-run is default)
-wp prc-pdf-extraction bulk-process
+wp prc pdf-extraction bulk-process
 
 # Enqueue bulk extraction jobs
-wp prc-pdf-extraction bulk-process --dry-run=false
+wp prc pdf-extraction bulk-process --dry-run=false
 
 # Resume a bulk run after interruption from a specific post ID
-wp prc-pdf-extraction bulk-process --dry-run=false --start-id=12345
+wp prc pdf-extraction bulk-process --dry-run=false --start-id=12345
 
 # List configured OCR providers and their availability
-wp prc-pdf-extraction list-providers
+wp prc pdf-extraction list-providers
 
 # Check extraction status for a post
-wp prc-pdf-extraction list-extractions --post_id=123
+wp prc pdf-extraction list-extractions --post_id=123
 
 # Validate an existing extraction post
-wp prc-pdf-extraction validate --post_id=456
+wp prc pdf-extraction validate --post_id=456
 
 # Estimate OCR cost before running
-wp prc-pdf-extraction estimate-cost --post_id=123
+wp prc pdf-extraction estimate-cost --post_id=123
 ```
 
 ### Provider-specific options
 
 ```bash
 # Force a specific OCR provider (bypasses orchestrator priority)
-wp prc-pdf-extraction process --post_id=123 --provider=claude
-wp prc-pdf-extraction process --post_id=123 --provider=gemini
+wp prc pdf-extraction process --post_id=123 --provider=claude
+wp prc pdf-extraction process --post_id=123 --provider=gemini
 
 # Override the Gemini model for a single test run
-wp prc-pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
+wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
 
 # Show Markdown output instead of plain text in test-file
-wp prc-pdf-extraction test-file --file=/path/to/test.pdf --show-markdown
+wp prc pdf-extraction test-file --file=/path/to/test.pdf --show-markdown
 ```
 
 ## Stored Post Meta
@@ -163,7 +163,7 @@ Each `pdf_extraction` post stores the following meta (all exposed via REST):
 
 ### No OCR providers available
 
-**Symptom**: `wp prc-pdf-extraction list-providers` shows no providers, or extraction returns `no_providers` WP_Error.
+**Symptom**: `wp prc pdf-extraction list-providers` shows no providers, or extraction returns `no_providers` WP_Error.
 
 **Cause**: Neither `PRC_PLATFORM_ANTHROPIC_API_KEY` nor `PRC_PLATFORM_GOOGLE_API_KEY` is defined in `vip-config/keys-and-tokens.php`.
 
@@ -183,4 +183,4 @@ Each `pdf_extraction` post stores the following meta (all exposed via REST):
 
 **Cause**: `Extraction_Service::download_remote_pdf()` detects `.vipdev.lndo.site` URLs and swaps them for the production URL. This is intentional — local environments typically don't have the uploaded PDF files locally.
 
-**Fix**: Pass `--file=/path/to/local.pdf` to `wp prc-pdf-extraction process` to use a local file and skip the download entirely.
+**Fix**: Pass `--file=/path/to/local.pdf` to `wp prc pdf-extraction process` to use a local file and skip the download entirely.

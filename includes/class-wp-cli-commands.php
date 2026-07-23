@@ -123,7 +123,7 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction list-providers
+	 *     wp prc pdf-extraction list-providers
 	 *
 	 * @when after_wp_load
 	 */
@@ -161,7 +161,7 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction list-extractions --post_id=123
+	 *     wp prc pdf-extraction list-extractions --post_id=123
 	 *
 	 * @when after_wp_load
 	 */
@@ -211,7 +211,7 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction estimate-cost --post_id=123
+	 *     wp prc pdf-extraction estimate-cost --post_id=123
 	 *
 	 * @when after_wp_load
 	 */
@@ -257,7 +257,7 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction validate --post_id=456
+	 *     wp prc pdf-extraction validate --post_id=456
 	 *
 	 * @when after_wp_load
 	 */
@@ -330,12 +330,12 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction process --post_id=123
-	 *     wp prc-pdf-extraction process --post_id=123 --dry-run
-	 *     wp prc-pdf-extraction process --post_id=123 --force
-	 *     wp prc-pdf-extraction process --post_id=123 --insecure
-	 *     wp prc-pdf-extraction process --post_id=123 --file=/path/to/local.pdf
-	 *     wp prc-pdf-extraction process --post_id=123 --form-parser
+	 *     wp prc pdf-extraction process --post_id=123
+	 *     wp prc pdf-extraction process --post_id=123 --dry-run
+	 *     wp prc pdf-extraction process --post_id=123 --force
+	 *     wp prc pdf-extraction process --post_id=123 --insecure
+	 *     wp prc pdf-extraction process --post_id=123 --file=/path/to/local.pdf
+	 *     wp prc pdf-extraction process --post_id=123 --form-parser
 	 *
 	 * @when after_wp_load
 	 */
@@ -538,11 +538,11 @@ class WP_CLI_Commands {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-pdf-extraction test-file --file=/path/to/test.pdf
-	 *     wp prc-pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --show-markdown
-	 *     wp prc-pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
-	 *     wp prc-pdf-extraction test-file --file=/path/to/test.pdf --provider=google-vision
-	 *     wp prc-pdf-extraction test-file --file=/path/to/test.pdf --form-parser
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --show-markdown
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=google-vision
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --form-parser
 	 *
 	 * @when after_wp_load
 	 */

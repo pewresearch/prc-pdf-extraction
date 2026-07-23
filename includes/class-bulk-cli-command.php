@@ -19,7 +19,7 @@ if ( ! class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
 
 /**
  * Bulk_CLI_Command extends WPCOM_VIP_CLI_Command and registers the
- * `wp prc-pdf-extraction bulk-process` subcommand.
+ * `wp prc pdf-extraction bulk-process` subcommand.
  */
 class Bulk_CLI_Command extends \WPCOM_VIP_CLI_Command {
 	/**
@@ -50,19 +50,19 @@ class Bulk_CLI_Command extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Preview (dry run — default)
-	 *     wp prc-pdf-extraction bulk-process
+	 *     wp prc pdf-extraction bulk-process
 	 *
 	 *     # Enqueue all extractions
-	 *     wp prc-pdf-extraction bulk-process --dry-run=false
+	 *     wp prc pdf-extraction bulk-process --dry-run=false
 	 *
 	 *     # Resume after interruption from post ID 12345
-	 *     wp prc-pdf-extraction bulk-process --dry-run=false --start-id=12345
+	 *     wp prc pdf-extraction bulk-process --dry-run=false --start-id=12345
 	 *
 	 *     # Force re-extraction (overwrite existing extractions)
-	 *     wp prc-pdf-extraction bulk-process --dry-run=false --force
+	 *     wp prc pdf-extraction bulk-process --dry-run=false --force
 	 *
 	 *     # Process at most 50 posts
-	 *     wp prc-pdf-extraction bulk-process --dry-run=false --total-batch-size=50
+	 *     wp prc pdf-extraction bulk-process --dry-run=false --total-batch-size=50
 	 *
 	 * @subcommand bulk-process
 	 * @synopsis [--dry-run=<bool>] [--batch-size=<number>] [--start-id=<id>] [--force] [--post-type=<type>] [--total-batch-size=<number>]

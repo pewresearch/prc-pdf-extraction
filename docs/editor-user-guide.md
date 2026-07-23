@@ -114,7 +114,7 @@ The extraction post may not be published yet, or the report's URL slug may have 
 
 ### "I want to re-run an extraction to get a fresher result"
 
-Contact the DevOps or engineering team. Re-extractions require running `wp prc-pdf-extraction process --post_id=<ID> --force` from the WP-CLI, which is a developer operation.
+Contact the DevOps or engineering team. Re-extractions require running `wp prc pdf-extraction process --post_id=<ID> --force` from the WP-CLI, which is a developer operation.
 
 ## Content Discovery for AI and Researchers
 

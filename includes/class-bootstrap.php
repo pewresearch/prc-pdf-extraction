@@ -142,9 +142,9 @@ class Bootstrap {
 
 		// Register WP-CLI commands
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			\WP_CLI::add_command( 'prc-pdf-extraction', WP_CLI_Commands::class );
+			\WP_CLI::add_command( 'prc pdf-extraction', WP_CLI_Commands::class );
 			if ( class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
-				\WP_CLI::add_command( 'prc-pdf-extraction', Bulk_CLI_Command::class );
+				\WP_CLI::add_command( 'prc pdf-extraction', Bulk_CLI_Command::class );
 			}
 		}
 	}

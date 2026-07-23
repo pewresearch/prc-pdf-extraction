@@ -14,13 +14,13 @@
 	},
 	"scripts": {
 		"test": [
-			"phpunit"
+			"phpunit --configuration ../../tests/prc-pdf-extraction/phpunit/phpunit.xml.dist"
 		],
 		"test-ms": [
-			"WP_MULTISITE=1 phpunit"
+			"WP_MULTISITE=1 phpunit --configuration ../../tests/prc-pdf-extraction/phpunit/phpunit.xml.dist"
 		],
 		"test-vip": [
-			"phpunit --configuration phpunit-vip.xml.dist"
+			"phpunit --configuration ../../tests/prc-pdf-extraction/phpunit/phpunit-vip.xml.dist"
 		]
 	},
 	"config": {

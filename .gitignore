@@ -1,5 +1,4 @@
 # Composer
-/vendor/
 
 # PHPUnit
 /coverage/
@@ -18,3 +17,6 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# vendor/ is committed for standalone installs (populated by platform ship CI).
+!vendor/
