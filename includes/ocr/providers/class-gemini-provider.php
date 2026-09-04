@@ -711,7 +711,6 @@ class Gemini_Provider implements OCR_Provider_Interface {
 		$errno   = curl_errno( $ch );
 		$errmsg  = curl_error( $ch );
 		$status  = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-		curl_close( $ch );
 
 		if ( ! $success && 0 !== $errno ) {
 			throw new Extraction_Failed_Exception(

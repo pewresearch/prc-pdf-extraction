@@ -190,7 +190,6 @@ class Claude_Provider implements OCR_Provider_Interface {
 		$response_body = curl_exec( $ch ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
 		$status_code   = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo
 		$curl_error    = curl_error( $ch ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_error
-		curl_close( $ch ); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_close
 
 		if ( false === $response_body || ! empty( $curl_error ) ) {
 			throw new Extraction_Failed_Exception(
