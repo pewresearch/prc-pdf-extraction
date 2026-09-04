@@ -1,6 +1,6 @@
 {
 	"name": "@prc/pdf-extraction",
-	"version": "1.0.1",
+	"version": "1.0.0",
 	"description": "Extract text from PDF documents using OCR services",
 	"scripts": {
 		"test:php": "vip dev-env shell --slug=prc-platform -- bash -c 'cd /wp/wp-content/plugins/prc-pdf-extraction && composer test-vip'",
