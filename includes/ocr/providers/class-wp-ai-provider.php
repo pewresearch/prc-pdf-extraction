@@ -93,7 +93,6 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	 * @param OCR_Request $request The OCR request.
 	 * @return OCR_Response The extraction response.
 	 * @throws Authentication_Exception If API credentials are invalid.
-	 * @throws Rate_Limit_Exception If rate limited.
 	 * @throws Extraction_Failed_Exception If extraction fails.
 	 */
 	public function extract_text( OCR_Request $request ): OCR_Response {
@@ -110,21 +109,21 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 		$timeout = (int) apply_filters( 'prc_pdf_extraction_ocr_timeout', 120 );
 		$options = RequestOptions::fromArray( array( RequestOptions::KEY_TIMEOUT => (float) $timeout ) );
 
-		// Gutenberg call - block HTML for post_content
+		// Gutenberg call: block HTML for post_content.
 		$gutenberg_prompt = $this->build_gutenberg_prompt();
 		$gutenberg_text   = $this->call_ai( $file_path, $gutenberg_prompt, $options, 'Gutenberg block HTML' );
 
-		// Markdown call - for _extracted_text_markdown and derived plain text
+		// Markdown call: for _extracted_text_markdown and derived plain text.
 		$markdown_prompt = $this->build_markdown_prompt();
 		$markdown_text   = $this->call_ai( $file_path, $markdown_prompt, $options, 'markdown' );
 
-		// Derive plain text from markdown
+		// Derive plain text from markdown.
 		$plain_text = $this->markdown_to_plain( $markdown_text );
 
-		// Confidence based on Gutenberg output (was_truncated not available from generate_text)
+		// Confidence based on Gutenberg output (was_truncated not available from generate_text).
 		$confidence = $this->calculate_confidence( $gutenberg_text, false );
 
-		// Combined cost for both calls
+		// Combined cost for both calls.
 		$cost = $this->estimate_cost( $file_path ) * 2;
 
 		return new OCR_Response(
@@ -147,9 +146,7 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 	 * @param RequestOptions $options   Request options (e.g. timeout).
 	 * @param string         $label     Label for error messages.
 	 * @return string Extracted text.
-	 * @throws Authentication_Exception If API credentials are invalid.
-	 * @throws Rate_Limit_Exception If rate limited.
-	 * @throws Extraction_Failed_Exception If extraction fails.
+	 * @throws \Exception If the AI client returns a WP_Error.
 	 */
 	private function call_ai( string $file_path, string $prompt, RequestOptions $options, string $label ): string {
 		try {
@@ -158,11 +155,22 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 				throw new \Exception( $builder->get_error_message() );
 			}
 
-			// Prefer Claude Fable 5. Do not set temperature — Fable 5 rejects
-			// temperature/top_p/top_k with HTTP 400 (adaptive thinking is always on).
+			// Prefer OpenRouter multimodal models (image input is registered).
+			// Do not set temperature — Fable 5 rejects temperature/top_p/top_k
+			// with HTTP 400 (adaptive thinking is always on). Native Anthropic
+			// and Google IDs remain last-resort if OpenRouter is unavailable.
 			$text = $builder
 				->with_file( $file_path, 'application/pdf' )
-				->using_model_preference( 'claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'gemini-3-flash-preview' )
+				->using_model_preference(
+					array( 'openrouter', 'anthropic/claude-fable-5' ),
+					array( 'openrouter', 'anthropic/claude-opus-4.8' ),
+					array( 'openrouter', 'anthropic/claude-sonnet-4.6' ),
+					array( 'openrouter', 'google/gemini-3-flash-preview' ),
+					'claude-fable-5',
+					'claude-opus-4-8',
+					'claude-sonnet-4-6',
+					'gemini-3-flash-preview'
+				)
 				->using_request_options( $options )
 				->generate_text();
 

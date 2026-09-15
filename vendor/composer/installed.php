@@ -3,7 +3,7 @@
         'name' => 'prc/pdf-extraction',
         'pretty_version' => 'dev-trunk',
         'version' => 'dev-trunk',
-        'reference' => '330ad074e1b2c9350f92f9ca240be6458a5d9132',
+        'reference' => '8792e4b155b3e9df8fd497e3bdcd386073af9294',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'prc/pdf-extraction' => array(
             'pretty_version' => 'dev-trunk',
             'version' => 'dev-trunk',
-            'reference' => '330ad074e1b2c9350f92f9ca240be6458a5d9132',
+            'reference' => '8792e4b155b3e9df8fd497e3bdcd386073af9294',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
