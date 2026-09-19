@@ -8,9 +8,9 @@ This plugin reads `topline`-type entries from a parent post's `reportMaterials` 
 
 ### Dependencies
 
--   **Upstream**: `prc-platform-core` (required), `prc-markdown-for-agents` (optional — Markdown endpoint falls back to a legacy template when absent), Action Scheduler (required for async processing)
--   **External APIs**: `PRC_PLATFORM_ANTHROPIC_API_KEY` for Claude (primary provider), `PRC_PLATFORM_GOOGLE_API_KEY` for Gemini (fallback provider)
--   **Downstream**: Nothing depends on this plugin directly; consumers access extractions through public URL endpoints or via the `pdf_extraction` post type.
+- **Upstream**: `prc-platform-core` (required), `prc-markdown-for-agents` (optional — Markdown endpoint falls back to a legacy template when absent), Action Scheduler (required for async processing)
+- **External APIs**: `PRC_PLATFORM_ANTHROPIC_API_KEY` for Claude (primary provider), `PRC_PLATFORM_GOOGLE_API_KEY` for Gemini (fallback provider)
+- **Downstream**: Nothing depends on this plugin directly; consumers access extractions through public URL endpoints or via the `pdf_extraction` post type.
 
 ## Architecture
 
@@ -61,7 +61,7 @@ The OCR layer uses a layered namespace under `PRC\Platform\PDF_Extraction\OCR`:
 | `prc_pdf_extraction_post_type`         | filter | Override the CPT slug (default: `pdf_extraction`)                                                 |
 | `prc_pdf_extraction_url_slug`          | filter | Override the public URL segment (default: `extraction`)                                           |
 | `prc_pdf_extraction_labels`            | filter | Override CPT label strings                                                                        |
-| `prc_pdf_extraction_claude_model`      | filter | Override the Claude model at runtime (default: `claude-fable-5`)                                  |
+| `prc_pdf_extraction_claude_model`      | filter | Override the Claude model at runtime (default: `claude-fable-5-1`)                                |
 | `prc_pdf_extraction_gemini_model`      | filter | Override the Gemini model at runtime                                                              |
 | `prc_pdf_extraction_claude_max_tokens` | filter | Override Claude `max_tokens` (default: 16384)                                                     |
 | `prc_pdf_extraction_ocr_timeout`       | filter | Override API request timeout in seconds (default: 120)                                            |
@@ -124,7 +124,7 @@ wp prc pdf-extraction process --post_id=123 --provider=claude
 wp prc pdf-extraction process --post_id=123 --provider=gemini
 
 # Override the Gemini model for a single test run
-wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
+wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3.8-flash
 
 # Show Markdown output instead of plain text in test-file
 wp prc pdf-extraction test-file --file=/path/to/test.pdf --show-markdown

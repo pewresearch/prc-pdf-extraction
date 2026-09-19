@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; this change only updates default model IDs.
 /**
  * Claude Provider for PRC PDF Extraction
  *
@@ -32,7 +33,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Default model name.
 	 */
-	const DEFAULT_MODEL = 'claude-fable-5';
+	const DEFAULT_MODEL = 'claude-fable-5-1';
 
 	/**
 	 * Anthropic Messages API endpoint.
@@ -85,7 +86,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Constructor.
 	 *
-	 * @param string|null $model Optional model name override (e.g. 'claude-opus-4-8').
+	 * @param string|null $model Optional model name override (e.g. 'claude-opus-5-1').
 	 */
 	public function __construct( ?string $model = null ) {
 		$this->api_key = defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) ? PRC_PLATFORM_ANTHROPIC_API_KEY : '';

@@ -62,8 +62,7 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 			if ( is_wp_error( $builder ) ) {
 				return false;
 			}
-			$prompt = $builder->using_temperature( 0.1 );
-			return $prompt->is_supported_for_text_generation();
+			return $builder->is_supported_for_text_generation();
 		} catch ( \Throwable $e ) {
 			return false;
 		}
@@ -155,21 +154,21 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 				throw new \Exception( $builder->get_error_message() );
 			}
 
-			// Prefer OpenRouter multimodal models (image input is registered).
-			// Do not set temperature — Fable 5 rejects temperature/top_p/top_k
-			// with HTTP 400 (adaptive thinking is always on). Native Anthropic
-			// and Google IDs remain last-resort if OpenRouter is unavailable.
+			// Prefer native Anthropic and Google. Do not set temperature —
+			// Fable 5.1 rejects temperature/top_p/top_k with HTTP 400 (adaptive
+			// thinking is always on). OpenRouter IDs remain last-resort if
+			// native providers are unavailable.
 			$text = $builder
 				->with_file( $file_path, 'application/pdf' )
 				->using_model_preference(
-					array( 'openrouter', 'anthropic/claude-fable-5' ),
-					array( 'openrouter', 'anthropic/claude-opus-4.8' ),
-					array( 'openrouter', 'anthropic/claude-sonnet-4.6' ),
-					array( 'openrouter', 'google/gemini-3-flash-preview' ),
-					'claude-fable-5',
-					'claude-opus-4-8',
-					'claude-sonnet-4-6',
-					'gemini-3-flash-preview'
+					'claude-fable-5-1',
+					'claude-opus-5-1',
+					'claude-sonnet-5',
+					'gemini-3.8-flash',
+					array( 'openrouter', 'anthropic/claude-fable-5.1' ),
+					array( 'openrouter', 'anthropic/claude-opus-5.1' ),
+					array( 'openrouter', 'anthropic/claude-sonnet-5' ),
+					array( 'openrouter', 'google/gemini-3.8-flash' )
 				)
 				->using_request_options( $options )
 				->generate_text();

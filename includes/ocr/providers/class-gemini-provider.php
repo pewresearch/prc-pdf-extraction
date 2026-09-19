@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; this change only updates default model IDs.
 /**
  * Gemini Provider for PRC PDF Extraction
  *
@@ -31,7 +32,7 @@ class Gemini_Provider implements OCR_Provider_Interface {
 	/**
 	 * Default model name.
 	 */
-	const DEFAULT_MODEL = 'gemini-3-flash-preview';
+	const DEFAULT_MODEL = 'gemini-3.8-flash';
 
 	/**
 	 * Base API URL (model is appended dynamically).

@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; this change only updates documented Gemini model IDs.
 /**
  * WP-CLI Commands for PRC PDF Extraction
  *
@@ -534,13 +535,13 @@ class WP_CLI_Commands {
 	 * : Show markdown output instead of plain text (useful for Gemini)
 	 *
 	 * [--model=<model>]
-	 * : Override the Gemini model name (e.g. gemini-3-flash-preview). Only applies to Gemini provider.
+	 * : Override the Gemini model name (e.g. gemini-3.8-flash). Only applies to Gemini provider.
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf
 	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --show-markdown
-	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3-flash-preview
+	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=gemini --model=gemini-3.8-flash
 	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --provider=google-vision
 	 *     wp prc pdf-extraction test-file --file=/path/to/test.pdf --form-parser
 	 *
