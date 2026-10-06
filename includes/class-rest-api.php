@@ -24,6 +24,8 @@ class REST_API {
 	private $loader;
 
 	/**
+	 * Register hooks.
+	 *
 	 * @param Loader $loader Hook loader.
 	 */
 	public function __construct( $loader ) {
@@ -94,18 +96,29 @@ class REST_API {
 	}
 
 	/**
-	 * Permission check: current user must be able to edit the target post.
+	 * Permission check: current user must be able to edit the target post, and
+	 * the attachment must be one of that post's topline report materials.
 	 *
 	 * @param \WP_REST_Request $request REST request.
 	 * @return bool|\WP_Error
 	 */
 	public function convert_permission_check( \WP_REST_Request $request ) {
-		$post_id = $request->get_param( 'post_id' );
+		$post_id       = (int) $request->get_param( 'post_id' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
 
-		if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		if ( $post_id <= 0 || ! current_user_can( 'edit_post', $post_id ) ) {
 			return new \WP_Error(
 				'rest_forbidden',
 				__( 'You do not have permission to convert PDF for this post.', 'prc-pdf-extraction' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$service = new Extraction_Service();
+		if ( ! $service->is_attachment_bound_to_post( $post_id, $attachment_id ) ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				__( 'This PDF is not a topline report material on this post.', 'prc-pdf-extraction' ),
 				array( 'status' => 403 )
 			);
 		}

@@ -162,12 +162,12 @@ class WP_AI_Provider implements OCR_Provider_Interface {
 				->with_file( $file_path, 'application/pdf' )
 				->using_model_preference(
 					'claude-fable-5-1',
-					'claude-opus-5-1',
-					'claude-sonnet-5',
+					'claude-opus-5-5',
+					'claude-sonnet-5-5',
 					'gemini-3.8-flash',
 					array( 'openrouter', 'anthropic/claude-fable-5.1' ),
-					array( 'openrouter', 'anthropic/claude-opus-5.1' ),
-					array( 'openrouter', 'anthropic/claude-sonnet-5' ),
+					array( 'openrouter', 'anthropic/claude-opus-5.5' ),
+					array( 'openrouter', 'anthropic/claude-sonnet-5.5' ),
 					array( 'openrouter', 'google/gemini-3.8-flash' )
 				)
 				->using_request_options( $options )

@@ -65,6 +65,30 @@ class Extraction_Service {
 	}
 
 	/**
+	 * Whether an attachment is one of the post's topline report materials.
+	 *
+	 * Binds OCR requests to the post the user can edit, so a user cannot bill
+	 * OCR against an arbitrary PDF by passing an unrelated attachment ID.
+	 *
+	 * @param int $post_id       Parent post ID.
+	 * @param int $attachment_id Attachment ID.
+	 * @return bool
+	 */
+	public function is_attachment_bound_to_post( int $post_id, int $attachment_id ): bool {
+		if ( $post_id <= 0 || $attachment_id <= 0 ) {
+			return false;
+		}
+
+		foreach ( $this->get_extraction_materials_from_post( $post_id ) as $material ) {
+			if ( isset( $material['attachmentId'] ) && (int) $material['attachmentId'] === $attachment_id ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get an existing extraction post for a topline by its attachment ID.
 	 *
 	 * @param int $parent_id     Parent post ID.
@@ -166,15 +190,18 @@ class Extraction_Service {
 					'https://prc-platform.vipdev.lndo.site/pewresearch-org/',
 					'http://prc-platform.vipdev.lndo.site/pewresearch-org/',
 				),
+				// phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar
 				'https://www.pewresearch.org/', // pragma: allowlist secret
 				$url
 			);
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: local dev URL replaced with production URL for attachment {$attachment_id}." );
 		}
 
 		$downloaded = download_url( $production_url, 30 );
 
 		if ( is_wp_error( $downloaded ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: download_url() failed for attachment {$attachment_id}: " . $downloaded->get_error_message() );
 			return false;
 		}
@@ -182,11 +209,13 @@ class Extraction_Service {
 		// Move download_url()'s auto-named temp file to our deterministic path.
 		if ( ! rename( $downloaded, $temp_file ) ) {
 			@unlink( $downloaded ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: failed to move temp file for attachment {$attachment_id}." );
 			return false;
 		}
 
 		if ( ! file_exists( $temp_file ) || 0 === filesize( $temp_file ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: downloaded file is empty or missing for attachment {$attachment_id}." );
 			return false;
 		}
@@ -288,18 +317,13 @@ class Extraction_Service {
 		update_post_meta( $extraction_id, '_validation_issues', '' );
 		update_post_meta( $extraction_id, '_processing_cost_usd', $response->get_cost() );
 		update_post_meta( $extraction_id, '_character_count', $response->get_character_count() );
-		if ( $duration_seconds !== null ) {
+		if ( null !== $duration_seconds ) {
 			update_post_meta( $extraction_id, '_extraction_duration_seconds', $duration_seconds );
 		}
 
 		// NOTE: Keep this disabled for now while in development.
+		// phpcs:ignore Squiz.Commenting.InlineComment.InvalidEndChar
 		// $this->update_parent_report_materials( $parent_id, $topline );
-
-		wp_mail(
-			DEFAULT_TECHNICAL_CONTACT,
-			'PDF Extraction Success',
-			'PDF Extraction successful, you can view the extraction at ' . get_permalink( $extraction_id )
-		);
 
 		return $extraction_id;
 	}
@@ -316,12 +340,14 @@ class Extraction_Service {
 	private function update_parent_report_materials( int $parent_id, array $topline ): void {
 		$attachment_id = isset( $topline['attachmentId'] ) ? (int) $topline['attachmentId'] : 0;
 		if ( $attachment_id <= 0 ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: update_parent_report_materials — no attachmentId in topline for post {$parent_id}. Skipping." );
 			return;
 		}
 
 		$materials = get_post_meta( $parent_id, 'reportMaterials', true );
 		if ( empty( $materials ) || ! is_array( $materials ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: update_parent_report_materials — no reportMaterials for post {$parent_id}. Skipping." );
 			return;
 		}
@@ -369,8 +395,10 @@ class Extraction_Service {
 
 		$result = update_post_meta( $parent_id, 'reportMaterials', array_values( $updated ) );
 		if ( false !== $result ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( sprintf( 'prc-pdf-extraction: updated report materials for post %d — swapped topline PDF for /topline link.', $parent_id ) );
 		} else {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( "prc-pdf-extraction: failed to update report materials for post {$parent_id}." );
 		}
 	}

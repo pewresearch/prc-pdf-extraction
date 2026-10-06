@@ -86,7 +86,7 @@ class Claude_Provider implements OCR_Provider_Interface {
 	/**
 	 * Constructor.
 	 *
-	 * @param string|null $model Optional model name override (e.g. 'claude-opus-5-1').
+	 * @param string|null $model Optional model name override (e.g. 'claude-opus-5-5').
 	 */
 	public function __construct( ?string $model = null ) {
 		$this->api_key = defined( 'PRC_PLATFORM_ANTHROPIC_API_KEY' ) ? PRC_PLATFORM_ANTHROPIC_API_KEY : '';

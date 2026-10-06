@@ -44,6 +44,7 @@ class Action_Scheduler_Handler {
 	 */
 	public static function init(): void {
 		add_action( self::ACTION_HOOK, array( __CLASS__, 'process' ), 10, 3 );
+		add_action( self::COMPLETE_HOOK, array( __CLASS__, 'notify_success' ), 10, 4 );
 		add_action( self::FAILED_HOOK, array( __CLASS__, 'notify_failure' ), 10, 4 );
 	}
 
@@ -101,7 +102,7 @@ class Action_Scheduler_Handler {
 				),
 				'partial_args_matching' => 'like',
 				'per_page'              => 1,
-				'offset'                 => 0,
+				'offset'                => 0,
 			),
 			'ids'
 		);
@@ -206,7 +207,7 @@ class Action_Scheduler_Handler {
 		$is_temp = strpos( $file_path, sys_get_temp_dir() ) === 0;
 
 		$start_time       = microtime( true );
-		$response        = $service->extract_text( $file_path, $attachment_id );
+		$response         = $service->extract_text( $file_path, $attachment_id );
 		$duration_seconds = microtime( true ) - $start_time;
 
 		if ( $is_temp ) {
@@ -233,14 +234,16 @@ class Action_Scheduler_Handler {
 		}
 
 		// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-		error_log( sprintf(
-			'prc-pdf-extraction: process action — extraction %d saved for post %d / attachment %d. Duration: %.2fs. Cost: $%.4f.',
-			$result,
-			$post_id,
-			$attachment_id,
-			$duration_seconds,
-			$response->get_cost()
-		) );
+		error_log(
+			sprintf(
+				'prc-pdf-extraction: process action — extraction %d saved for post %d / attachment %d. Duration: %.2fs. Cost: $%.4f.',
+				$result,
+				$post_id,
+				$attachment_id,
+				$duration_seconds,
+				$response->get_cost()
+			)
+		);
 
 		/**
 		 * Fires after a topline extraction completes successfully.
@@ -271,6 +274,46 @@ class Action_Scheduler_Handler {
 		 * @param string $error_message Error description.
 		 */
 		do_action( self::FAILED_HOOK, $post_id, $attachment_id, $user_id, $error_message );
+	}
+
+	/**
+	 * Send an email notification to the requesting user on success.
+	 *
+	 * Jobs without a requesting user (bulk CLI runs) send no email.
+	 *
+	 * @param int $extraction_id Topline CPT post ID.
+	 * @param int $post_id       Parent post ID.
+	 * @param int $attachment_id PDF attachment ID.
+	 * @param int $user_id       Requesting user ID.
+	 */
+	public static function notify_success( int $extraction_id, int $post_id, int $attachment_id, int $user_id ): void {
+		if ( $user_id <= 0 ) {
+			return;
+		}
+
+		$user = get_user_by( 'id', $user_id );
+		if ( ! $user ) {
+			return;
+		}
+
+		$post  = get_post( $post_id );
+		$title = $post ? $post->post_title : "Post #{$post_id}";
+
+		$subject = sprintf(
+			/* translators: %s: post title */
+			__( 'Topline conversion complete: %s', 'prc-pdf-extraction' ),
+			$title
+		);
+
+		$body = sprintf(
+			"The topline PDF conversion for \"%s\" (Post ID: %d, Attachment ID: %d) is complete.\n\nView the extraction: %s\n",
+			$title,
+			$post_id,
+			$attachment_id,
+			get_permalink( $extraction_id )
+		);
+
+		wp_mail( $user->user_email, $subject, $body );
 	}
 
 	/**
