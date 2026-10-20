@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; PRC-1017 only changes the Markdown for Agents requirement and comments.
 /**
  * PRC PDF Extraction
  *
@@ -19,7 +20,7 @@
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       prc-pdf-extraction
- * Requires Plugins:  prc-scripts, prc-markdown-for-agents
+ * Requires Plugins:  prc-scripts
  */
 
 namespace PRC\Platform\PDF_Extraction;

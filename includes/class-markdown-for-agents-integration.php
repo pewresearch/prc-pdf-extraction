@@ -1,6 +1,6 @@
 <?php
 /**
- * Integration with prc-markdown-for-agents plugin.
+ * Integration with the Markdown for Agents stack (PRC plugin, or VIP Content for Agents with PRC Bridge).
  *
  * Registers the topline post type with the markdown pipeline, supplies
  * pre-built OCR markdown when available, and enriches frontmatter with
@@ -12,7 +12,7 @@
 namespace PRC\Platform\PDF_Extraction;
 
 /**
- * Connects prc-pdf-extraction with prc-markdown-for-agents.
+ * Connects prc-pdf-extraction with the Markdown for Agents stack.
  *
  * @package PRC_PDF_Extraction
  */

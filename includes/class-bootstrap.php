@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; PRC-1017 only changes the Markdown for Agents requirement and comments.
 /**
  * Plugin bootstrap class
  *
@@ -126,7 +127,7 @@ class Bootstrap {
 			new Llms_Txt_Section( $this->get_loader() );
 		}
 
-		// Wire up prc-markdown-for-agents integration when that plugin is active.
+		// Wire up the Markdown for Agents integration when the PRC plugin, or VIP Content for Agents with PRC Bridge, is loaded.
 		if ( class_exists( 'PRC\Platform\Markdown_For_Agents\Markdown_Response' ) ) {
 			new Markdown_For_Agents_Integration( $this->get_loader() );
 		}

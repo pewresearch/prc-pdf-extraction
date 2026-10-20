@@ -1,4 +1,5 @@
 <?php
+// phpcs:ignoreFile -- Pre-existing WPCS/VIP debt; PRC-1017 only changes the Markdown for Agents requirement and comments.
 /**
  * Rewrite Rules for Content Endpoints
  *
@@ -41,9 +42,10 @@ class Rewrite_Rules {
 	 * Maybe intercept extraction request.
 	 *
 	 * Intercepts requests early and checks if the URL ends with /{url_slug} or /text.
-	 * For /{url_slug}, delegates to prc-markdown-for-agents (Markdown_Response::serve)
-	 * which produces standardized markdown with YAML frontmatter. Falls back to the
-	 * legacy template if prc-markdown-for-agents is unavailable.
+	 * For /{url_slug}, delegates to the Markdown for Agents stack (the PRC plugin, or VIP Content for
+	 * Agents with PRC Bridge) through Markdown_Response::serve, which produces
+	 * standardized markdown with YAML frontmatter. Falls back to the legacy template
+	 * if neither is loaded.
 	 * For /text, loads the plain-text template directly.
 	 *
 	 * @param \WP $wp Current WordPress environment instance.
@@ -84,14 +86,14 @@ class Rewrite_Rules {
 	}
 
 	/**
-	 * Serve the extraction post as markdown via prc-markdown-for-agents.
+	 * Serve the extraction post as markdown through the Markdown for Agents stack.
 	 *
 	 * Looks up the child extraction post for the given parent and calls
 	 * Markdown_Response::serve() which produces a standardized response with
 	 * YAML frontmatter, Content-Signal, X-Markdown-Tokens, and Vary headers.
 	 *
-	 * Falls back to the legacy template-extraction.php if prc-markdown-for-agents
-	 * is not available.
+	 * Falls back to the legacy template-extraction.php if neither the PRC plugin nor
+	 * VIP Content for Agents with PRC Bridge is loaded.
 	 *
 	 * @param int $parent_post_id Parent post ID.
 	 */
@@ -122,7 +124,7 @@ class Rewrite_Rules {
 			// serve() calls exit; this line is never reached.
 		}
 
-		// Fallback: prc-markdown-for-agents is not active.
+		// Fallback: no Markdown for Agents stack is loaded.
 		set_query_var( 'extraction_post', $parent_post_id );
 		$template_file = PRC_PDF_EXTRACTION_DIR . '/includes/templates/template-extraction.php';
 

@@ -4,11 +4,11 @@ Extracts text from topline survey PDFs using AI OCR providers and surfaces the c
 
 ## Overview
 
-This plugin reads `topline`-type entries from a parent post's `reportMaterials` meta, runs AI OCR on the attached PDFs, and persists each result as a `pdf_extraction` child post. Extracted content is available at `/{parent-slug}/extraction` (Markdown with YAML frontmatter) and `/{parent-slug}/text` (plain text). Extraction jobs are queued asynchronously via Action Scheduler and can also be triggered from WP-CLI or the block editor via REST API. The plugin integrates with `prc-markdown-for-agents` to serve standardized Markdown responses with proper headers for LLM discovery.
+This plugin reads `topline`-type entries from a parent post's `reportMaterials` meta, runs AI OCR on the attached PDFs, and persists each result as a `pdf_extraction` child post. Extracted content is available at `/{parent-slug}/extraction` (Markdown with YAML frontmatter) and `/{parent-slug}/text` (plain text). Extraction jobs are queued asynchronously via Action Scheduler and can also be triggered from WP-CLI or the block editor via REST API. The plugin integrates with the Markdown for Agents stack (`prc-markdown-for-agents`, or VIP Content for Agents with PRC Bridge) to serve standardized Markdown responses with proper headers for LLM discovery.
 
 ### Dependencies
 
-- **Upstream**: `prc-platform-core` (required), `prc-markdown-for-agents` (optional — Markdown endpoint falls back to a legacy template when absent), Action Scheduler (required for async processing)
+- **Upstream**: `prc-platform-core` (required), the Markdown for Agents stack (optional — `prc-markdown-for-agents`, or VIP Content for Agents with PRC Bridge; the Markdown endpoint falls back to a legacy template when neither is loaded), Action Scheduler (required for async processing)
 - **External APIs**: `PRC_PLATFORM_ANTHROPIC_API_KEY` for Claude (primary provider), `PRC_PLATFORM_GOOGLE_API_KEY` for Gemini (fallback provider)
 - **Downstream**: Nothing depends on this plugin directly; consumers access extractions through public URL endpoints or via the `pdf_extraction` post type.
 
@@ -20,7 +20,7 @@ Extractions follow a request → queue → process → persist flow:
 2. `Action_Scheduler_Handler::schedule()` enqueues an async job.
 3. On the job callback, `Extraction_Service` resolves the PDF (local uploads dir or remote download), calls `OCR_Orchestrator::extract_text()`, and saves the result as a `pdf_extraction` CPT post.
 4. `OCR_Orchestrator` tries registered providers sorted by priority. Claude (priority 4) runs first; Gemini (priority 5) is the fallback. Each provider returns an `OCR_Response` with plain text, Markdown, and Gutenberg block HTML.
-5. Public endpoints (`/extraction`, `/text`) are intercepted early in `parse_request` by `Rewrite_Rules`, which delegates Markdown serving to `prc-markdown-for-agents` when available.
+5. Public endpoints (`/extraction`, `/text`) are intercepted early in `parse_request` by `Rewrite_Rules`, which delegates Markdown serving to the Markdown for Agents stack when one is loaded.
 6. `Content_Discovery` adds `<link rel="alternate">` tags, JSON-LD `DigitalDocument` structured data, `/llms.txt`, and `robots.txt` Allow rules to make extractions discoverable by crawlers and LLMs.
 
 The OCR layer uses a layered namespace under `PRC\Platform\PDF_Extraction\OCR`:
@@ -51,7 +51,7 @@ The OCR layer uses a layered namespace under `PRC\Platform\PDF_Extraction\OCR`:
 | `includes/ocr/providers/class-claude-provider.php`           | Anthropic API integration; uses Files API to upload once and cache `file_id` on attachment meta                     |
 | `includes/ocr/providers/class-gemini-provider.php`           | Google Gemini API integration; page-grouped extraction with validation                                              |
 | `includes/ocr/providers/trait-shared-extraction-prompts.php` | Markdown and Gutenberg block extraction prompts shared by Claude and Gemini                                         |
-| `includes/templates/template-extraction.php`                 | Fallback Markdown template (used when `prc-markdown-for-agents` is inactive)                                        |
+| `includes/templates/template-extraction.php`                 | Fallback Markdown template (used when no Markdown for Agents stack is loaded)                                       |
 | `includes/templates/template-text.php`                       | Plain-text response template for `/text` endpoint                                                                   |
 
 ## Hooks & Filters
